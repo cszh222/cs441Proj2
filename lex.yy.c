@@ -380,8 +380,8 @@ struct yy_trans_info
 static yyconst flex_int16_t yy_accept[60] =
     {   0,
         0,    0,   22,   20,   19,   19,   20,   18,   15,   16,
-       18,   18,   18,   20,   20,   20,   20,   20,   20,   20,
-       20,   19,    4,    0,   16,    2,    3,    1,   14,   11,
+       18,   18,   18,   14,   14,   14,   14,   14,   14,   14,
+       14,   19,    4,    0,   16,    2,    3,    1,   14,   11,
        14,    6,   14,   14,   14,   14,   14,   17,   14,   14,
         9,   14,   14,   14,   14,   14,    7,   14,   14,   14,
        14,   14,    8,   14,   13,    5,   10,   12,    0
@@ -817,12 +817,12 @@ return PRINT;
 case 9:
 YY_RULE_SETUP
 #line 19 "calc3.l"
-return INTEGER;
+return INT;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
 #line 20 "calc3.l"
-return DOUBLE;
+return DOUB;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP

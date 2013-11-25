@@ -1,0 +1,2 @@
+
+rm -rf y.tab.h y.tab.c lex.yy.o lex.yy.h symbol_table.o calc3

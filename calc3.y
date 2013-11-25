@@ -12,6 +12,8 @@ nodeType *id(char* i);
 nodeType *integer(int value);
 nodeType *doub(double value);
 nodeType *newId(char* i);
+nodeType *declareDoub(nodeType *p);
+nodeType *declareInt(nodeType *p);
 void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
@@ -32,7 +34,7 @@ void yyerror(char *s);
 %token <iValue> INTEGER
 %token <sVariable> VARIABLE
 %token <fValue> DOUBLE
-%token WHILE IF PRINT DO REPEAT UNTIL
+%token WHILE IF PRINT DO REPEAT UNTIL INT DOUB
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -64,12 +66,12 @@ stmt:
         | IF '(' expr ')' stmt ELSE stmt { $$ = opr(IF, 3, $3, $5, $7); }
         | '{' stmt_list '}'              { $$ = $2; }
         | declaration ';'                { $$ = $1;}
-        | DO stmt WHILE '(' expr ')'     { $$ = opr(DO, 2, $2, opr(WHILE, 2, $5, $2));}
-        | REPEAT stmt UNTIL '(' expr ')' { $$ = opr(REPEAT, 2, $2, opr(UNTIL, 2, $5, $2));}
+        | DO stmt WHILE '(' expr ')'     { $$ = opr(DO, 2, $2, $5);}
+        | REPEAT stmt UNTIL '(' expr ')' { $$ = opr(REPEAT, 2, $2, $5);}
         ;
 
-declaration:   INTEGER variable          {$$ = opr(INTEGER, 1, $2);}
-            | DOUBLE variable            {$$ = opr(DOUBLE, 1, $2);}
+declaration:   INT variable            {$$ = opr(INT, 1, declareInt($2));}
+            | DOUB variable            {$$ = opr(DOUB, 1, declareDoub($2));}
             ;
 
 variable: VARIABLE '=' expr ',' variable {$$ = opr(',', 2, opr('=', 2, newId($1), $3), $5);}
@@ -105,11 +107,6 @@ expr:
 
 #define SIZEOF_NODETYPE ((char *)&p->con - (char *)p)
 
-int ex(nodeType *p){
-    /*to be implemented later*/
-    return 0;
-}
-
 nodeType *integer(int value) {
     nodeType *p;
     size_t nodeSize;
@@ -118,11 +115,10 @@ nodeType *integer(int value) {
     nodeSize = SIZEOF_NODETYPE + sizeof(conNodeType);
     if ((p = malloc(nodeSize)) == NULL)
         yyerror("out of memory");
-
+    
     /* copy information */
     p->type = typeInt;
     p->con.value = value;
-
     return p;
 }
 
@@ -141,22 +137,6 @@ nodeType *doub(double value){
 
     return p;
 }
-
-/*nodeType *id(int i) {
-    nodeType *p;
-    size_t nodeSize;*/
-
-    /* allocate node */
-    /*nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
-    if ((p = malloc(nodeSize)) == NULL)
-        yyerror("out of memory");*/
-
-    /* copy information */
-    /*p->type = typeId;
-    p->id.i = i;
-
-    return p;
-}*/
 
 nodeType *id(char* i){
     symbol_entry* entry;
@@ -191,6 +171,8 @@ nodeType *newId(char* i){
 
     p->type = typeId;
     p->id.i = getSymbolEntry(i);
+
+    return p;
 }
 
 nodeType *opr(int oper, int nops, ...) {
@@ -216,9 +198,50 @@ nodeType *opr(int oper, int nops, ...) {
     return p;
 }
 
+/* setting type of declared variables to INT*/
+nodeType *declareInt(nodeType *p){
+    switch(p->type){
+        case typeId: {
+            symbol_entry *entry = p->id.i;
+            entry->type = INT;
+            return p;
+        }
+        case typeOpr:
+            switch(p->opr.oper){
+                case ',': 
+                    declareInt(p->opr.op[0]);
+                    declareInt(p->opr.op[1]);
+                    return p;
+                case '=': 
+                    declareInt(p->opr.op[0]);
+                    return p;
+        }
+    }
+}
+
+/* setting type of declared variables to DOUB*/
+nodeType *declareDoub(nodeType *p){
+    switch(p->type){
+        case typeId: {
+            symbol_entry *entry = p->id.i;
+            entry->type = DOUB;
+            return p;
+        }
+        case typeOpr:
+            switch(p->opr.oper){
+                case ',': 
+                    declareDoub(p->opr.op[0]);
+                    declareDoub(p->opr.op[1]);
+                    return p;
+                case '=': 
+                    declareDoub(p->opr.op[0]);
+                    return p;
+        }
+    }
+}
+
 void freeNode(nodeType *p) {
     int i;
-
     if (!p) return;
     if (p->type == typeOpr) {
         for (i = 0; i < p->opr.nops; i++)
@@ -229,10 +252,65 @@ void freeNode(nodeType *p) {
 
 void yyerror(char *s) {
     fprintf(stdout, "%s\n", s);
+    exit(1);
 }
 
 int main(void) {
+    pushSymbolTable();
     lineno = 1;
     yyparse();
+    return 0;
+}
+
+int ex(nodeType *p) {
+    if (!p) return 0;
+    switch(p->type) {
+    case typeInt:       return p->con.value;
+    case typeFloat:     return p->fl.value;
+    case typeId:        return p->id.i->name;
+    case typeOpr:
+        switch(p->opr.oper) {
+        case WHILE:     while(ex(p->opr.op[0])) 
+                            ex(p->opr.op[1]); 
+                        return 0;
+        case DO:        do 
+                            ex(p->opr.op[0]);
+                        while(ex(p->opr.op[1]));
+                        return 0;
+        case REPEAT:    do
+                            ex(p->opr.op[0]);
+                        while(!ex(p->opr.op[1]));
+                        return 0;
+        case INT:       ex(p->opr.op[0]); 
+                        return 0;
+        case DOUB:      ex(p->opr.op[0]);  
+                        return 0;
+        case ',':       ex(p->opr.op[0]);
+                        ex(p->opr.op[1]);
+                        return 0;
+        case '=':       if (p->opr.op[0]->id.i->type == INT)
+                            return p->opr.op[0]->id.i->iVal = ex(p->opr.op[1]);
+                        else if (p->opr.op[0]->id.i->type == DOUB)
+                            return p->opr.op[0]->id.i->fVal = ex(p->opr.op[1]);
+        case IF:        if (ex(p->opr.op[0]))
+                            ex(p->opr.op[1]);
+                        else if (p->opr.nops > 2)
+                            ex(p->opr.op[2]);
+                        return 0;
+        case PRINT:     printf("%d\n", ex(p->opr.op[0])); return 0;
+        case ';':       ex(p->opr.op[0]); return ex(p->opr.op[1]);
+        case UMINUS:    return -ex(p->opr.op[0]);
+        case '+':       return ex(p->opr.op[0]) + ex(p->opr.op[1]);
+        case '-':       return ex(p->opr.op[0]) - ex(p->opr.op[1]);
+        case '*':       return ex(p->opr.op[0]) * ex(p->opr.op[1]);
+        case '/':       return ex(p->opr.op[0]) / ex(p->opr.op[1]);
+        case '<':       return ex(p->opr.op[0]) < ex(p->opr.op[1]);
+        case '>':       return ex(p->opr.op[0]) > ex(p->opr.op[1]);
+        case GE:        return ex(p->opr.op[0]) >= ex(p->opr.op[1]);
+        case LE:        return ex(p->opr.op[0]) <= ex(p->opr.op[1]);
+        case NE:        return ex(p->opr.op[0]) != ex(p->opr.op[1]);
+        case EQ:        return ex(p->opr.op[0]) == ex(p->opr.op[1]);
+        }
+    }
     return 0;
 }

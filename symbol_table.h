@@ -24,7 +24,7 @@ typedef struct symbol_entry symbol_entry;
 
 extern void printSymbolTable();
 extern void popSymbolTable();
-extern void pushSymbolTable(); // once
+extern void pushSymbolTable();    // once
 extern void addSymbol(struct symbol_entry*, int lineno); // need this
 extern struct symbol_entry* getSymbolEntryByRelAddr(int, int);
 extern struct symbol_entry* getSymbolEntry(const char *); // need this

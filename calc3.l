@@ -16,13 +16,13 @@ extern int lineno;
 "if"            return IF;
 "else"          return ELSE;
 "print"         return PRINT;
-"int"           return INTEGER;
-"double"        return DOUBLE;
+"int"           return INT;
+"double"        return DOUB;
 "do"            return DO;
 "repeat"        return REPEAT;
 "until"         return UNTIL;
 
-[a-zA-Z_][a-zA-Z0-9_]+ { 
+[a-zA-Z_][a-zA-Z0-9_]* { 
                 yylval.sVariable = strdup(yytext);
                 return VARIABLE;
               }
