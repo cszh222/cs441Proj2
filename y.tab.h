@@ -46,13 +46,15 @@
      DO = 264,
      REPEAT = 265,
      UNTIL = 266,
-     IFX = 267,
-     ELSE = 268,
-     NE = 269,
-     EQ = 270,
-     LE = 271,
-     GE = 272,
-     UMINUS = 273
+     INT = 267,
+     DOUB = 268,
+     IFX = 269,
+     ELSE = 270,
+     NE = 271,
+     EQ = 272,
+     LE = 273,
+     GE = 274,
+     UMINUS = 275
    };
 #endif
 /* Tokens.  */
@@ -65,13 +67,15 @@
 #define DO 264
 #define REPEAT 265
 #define UNTIL 266
-#define IFX 267
-#define ELSE 268
-#define NE 269
-#define EQ 270
-#define LE 271
-#define GE 272
-#define UMINUS 273
+#define INT 267
+#define DOUB 268
+#define IFX 269
+#define ELSE 270
+#define NE 271
+#define EQ 272
+#define LE 273
+#define GE 274
+#define UMINUS 275
 
 
 
@@ -81,7 +85,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 25 "calc3.y"
+#line 27 "calc3.y"
 
     int iValue;                 /* integer value */
     double fValue;
@@ -91,7 +95,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 95 "y.tab.h"
+#line 99 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

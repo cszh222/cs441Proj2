@@ -265,7 +265,12 @@ int main(void) {
 int ex(nodeType *p) {
     if (!p) return 0;
     switch(p->type) {
-    case typeInt:       return p->con.value;
+    case typeInt:       {
+                            value* newVal = malloc(sizeof(value));
+                            newVal->type = intValType;
+                            newVal->intVal = p->con.value;
+                            return newVal;
+                        }
     case typeFloat:     return p->fl.value;
     case typeId:        if (p->id.i->type == TYPE_INT)
                             return p->id.i->iVal;
@@ -303,8 +308,24 @@ int ex(nodeType *p) {
                         return 0;
         case PRINT:     printf("%d\n", ex(p->opr.op[0])); return 0;
         case ';':       ex(p->opr.op[0]); return ex(p->opr.op[1]);
-        case UMINUS:    return -ex(p->opr.op[0]);
-        case '+':       return ex(p->opr.op[0]) + ex(p->opr.op[1]);
+        case UMINUS:    {
+                        value* newVal = ex(p->opr.op[0]);
+                        if(newVal->type == intValType)
+                           newVal->intVal = -1*newVal->intVal;
+                        else
+                            newVal->floatVal = -1*newVal->floatVal
+                        return newVal;
+                        }
+        case '+':       {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal + newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal + newVal2.floatVal;
+                         return newVal1;
+                         }
+                        return ex(p->opr.op[0]) + ex(p->opr.op[1]);
         case '-':       return ex(p->opr.op[0]) - ex(p->opr.op[1]);
         case '*':       return ex(p->opr.op[0]) * ex(p->opr.op[1]);
         case '/':       return ex(p->opr.op[0]) / ex(p->opr.op[1]);

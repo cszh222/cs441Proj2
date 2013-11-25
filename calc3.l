@@ -40,6 +40,10 @@ extern int lineno;
                 yylval.fValue = atof(yytext);
                 return DOUBLE;
               }
+[1-9][0-9]*.[0-9][0-9]*      {
+                              yylval.fValue = atof(yytext);
+                              return DOUBLE;
+                             }        
 
 [-()<>=+*/;{}.,] {
                 return *yytext;
@@ -47,8 +51,7 @@ extern int lineno;
 
 [ \t\n]+        {
                     if(strcmp(yytext,"\n") == 0){
-                        printf("%d", lineno);
-                        lineno++;
+                      lineno++;
                     }
                 }/* ignore whitespace */
 
