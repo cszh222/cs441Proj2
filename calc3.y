@@ -325,16 +325,87 @@ int ex(nodeType *p) {
                             newVal1.floatVal = newVal1.floatVal + newVal2.floatVal;
                          return newVal1;
                          }
-                        return ex(p->opr.op[0]) + ex(p->opr.op[1]);
-        case '-':       return ex(p->opr.op[0]) - ex(p->opr.op[1]);
-        case '*':       return ex(p->opr.op[0]) * ex(p->opr.op[1]);
-        case '/':       return ex(p->opr.op[0]) / ex(p->opr.op[1]);
-        case '<':       return ex(p->opr.op[0]) < ex(p->opr.op[1]);
-        case '>':       return ex(p->opr.op[0]) > ex(p->opr.op[1]);
-        case GE:        return ex(p->opr.op[0]) >= ex(p->opr.op[1]);
-        case LE:        return ex(p->opr.op[0]) <= ex(p->opr.op[1]);
-        case NE:        return ex(p->opr.op[0]) != ex(p->opr.op[1]);
-        case EQ:        return ex(p->opr.op[0]) == ex(p->opr.op[1]);
+        case '-':       {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal - newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal - newVal2.floatVal;
+                         return newVal1;
+                         }
+        case '*':       {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal * newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal * newVal2.floatVal;
+                         return newVal1;
+                         }
+        case '/':       {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal / newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal / newVal2.floatVal;
+                         return newVal1;
+                         }
+        case '<':       {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal < newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal < newVal2.floatVal;
+                         return newVal1;
+                         }
+        case '>':       {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal > newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal > newVal2.floatVal;
+                         return newVal1;
+                         }
+        case GE:        {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal >= newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal >= newVal2.floatVal;
+                         return newVal1;
+                         }
+        case LE:        {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal <= newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal <= newVal2.floatVal;
+                         return newVal1;
+                         }
+        case NE:        {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal != newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal != newVal2.floatVal;
+                         return newVal1;
+                         }
+        case EQ:        {
+                         value* newVal1 = ex(p->opr.op[0]);
+                         value* newVal2 = ex(p->opr.op[1]);
+                         if(newVal1->type == intValType)
+                            newVal1.intVal = newVal1.intVal == newVal2.intVal;
+                         else
+                            newVal1.floatVal = newVal1.floatVal == newVal2.floatVal;
+                         return newVal1;
+                         }		
         }
     }
     return 0;
