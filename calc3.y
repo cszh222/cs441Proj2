@@ -157,13 +157,13 @@ nodeType *id(char* i){
 
 nodeType *newId(char* i){
     symbol_entry* newEntry = malloc(sizeof(symbol_entry));
+    nodeType *p;
+    size_t nodeSize;
+
     if(getSymbolEntry(i)!=0)
         yyerror("identifier has already been declared");
     newEntry->name = strdup(i);
     addSymbol(newEntry, lineno);
-
-    nodeType *p;
-    size_t nodeSize;
 
     nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
     if ((p = malloc(nodeSize)) == NULL)
@@ -203,7 +203,7 @@ nodeType *declareInt(nodeType *p){
     switch(p->type){
         case typeId: {
             symbol_entry *entry = p->id.i;
-            entry->type = INT;
+            entry->type = TYPE_INT;
             return p;
         }
         case typeOpr:
@@ -224,7 +224,7 @@ nodeType *declareDoub(nodeType *p){
     switch(p->type){
         case typeId: {
             symbol_entry *entry = p->id.i;
-            entry->type = DOUB;
+            entry->type = TYPE_FLOAT;
             return p;
         }
         case typeOpr:
@@ -251,7 +251,7 @@ void freeNode(nodeType *p) {
 }
 
 void yyerror(char *s) {
-    fprintf(stdout, "%s\n", s);
+    fprintf(stderr, "%s\n", s);
     exit(1);
 }
 
@@ -267,14 +267,18 @@ int ex(nodeType *p) {
     switch(p->type) {
     case typeInt:       return p->con.value;
     case typeFloat:     return p->fl.value;
-    case typeId:        return p->id.i->name;
+    case typeId:        if (p->id.i->type == TYPE_INT)
+                            return p->id.i->iVal;
+                        else if (p->id.i->type == TYPE_FLOAT)
+                            return p->id.i->fVal;
     case typeOpr:
         switch(p->opr.oper) {
-        case WHILE:     while(ex(p->opr.op[0])) 
+        case WHILE:     while(ex(p->opr.op[0]))
                             ex(p->opr.op[1]); 
                         return 0;
-        case DO:        do 
-                            ex(p->opr.op[0]);
+        case DO:        do{ 
+                           ex(p->opr.op[0]);
+                        }
                         while(ex(p->opr.op[1]));
                         return 0;
         case REPEAT:    do
@@ -288,9 +292,9 @@ int ex(nodeType *p) {
         case ',':       ex(p->opr.op[0]);
                         ex(p->opr.op[1]);
                         return 0;
-        case '=':       if (p->opr.op[0]->id.i->type == INT)
+        case '=':       if (p->opr.op[0]->id.i->type == TYPE_INT)
                             return p->opr.op[0]->id.i->iVal = ex(p->opr.op[1]);
-                        else if (p->opr.op[0]->id.i->type == DOUB)
+                        else if (p->opr.op[0]->id.i->type == TYPE_FLOAT)
                             return p->opr.op[0]->id.i->fVal = ex(p->opr.op[1]);
         case IF:        if (ex(p->opr.op[0]))
                             ex(p->opr.op[1]);

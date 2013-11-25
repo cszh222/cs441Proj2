@@ -13,10 +13,10 @@ struct symbol_entry {
 	int 	type;
 	int 	size;
 	int 	offset;
-   union { /* Added */
-     int iVal;
-     double fVal;
-   };
+    union { /* Added */
+      int iVal;
+      double fVal;
+    };
 	const char *name; /* changed JWJ */
 };
 
