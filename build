@@ -8,21 +8,26 @@
 #    extern int yylval;
 
 # calc1
-bison -y -d calc1.y
-flex calc1.l
-gcc -c y.tab.c lex.yy.c
-gcc y.tab.o lex.yy.o -o calc1.exe
+#bison -y -d calc1.y
+#flex calc1.l
+#gcc -c y.tab.c lex.yy.c
+#gcc y.tab.o lex.yy.o -o calc1.exe
 
 # calc2
-bison -y -d calc2.y
-flex calc2.l
-gcc -c y.tab.c lex.yy.c
-gcc y.tab.o lex.yy.o -o calc2.exe
+#bison -y -d calc2.y
+#flex calc2.l
+#gcc -c y.tab.c lex.yy.c
+#gcc y.tab.o lex.yy.o -o calc2.exe
 
 # calc3
 bison -y -d calc3.y
 flex calc3.l
-gcc -c y.tab.c lex.yy.c
-gcc y.tab.o lex.yy.o calc3a.c -o calc3a.exe
-gcc y.tab.o lex.yy.o calc3b.c -o calc3b.exe
-gcc y.tab.o lex.yy.o calc3g.c -o calc3g.exe
+gcc -c y.tab.c lex.yy.c 
+g++ -c symbol_table.cc
+g++ y.tab.o lex.yy.o symbol_table.o -o calc3
+
+
+
+#gcc y.tab.o lex.yy.o calc3a.c -o calc3a.exe
+#gcc y.tab.o lex.yy.o calc3b.c -o calc3b.exe
+#gcc y.tab.o lex.yy.o calc3g.c -o calc3g.exe

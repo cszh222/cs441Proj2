@@ -6,7 +6,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+	
 struct symbol_entry {
 	int 	addr;
 	int 	blk_level;
@@ -19,6 +19,8 @@ struct symbol_entry {
    };
 	const char *name; /* changed JWJ */
 };
+
+typedef struct symbol_entry symbol_entry;
 
 extern void printSymbolTable();
 extern void popSymbolTable();

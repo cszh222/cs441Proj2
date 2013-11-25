@@ -1,13 +1,20 @@
-typedef enum { typeCon, typeId, typeOpr } nodeEnum;
+#include "symbol_table.h"
+
+typedef enum { typeInt, typeFloat, typeId, typeOpr} nodeEnum; /* added */
 
 /* constants */
 typedef struct {
     int value;                  /* value of constant */
 } conNodeType;
 
+/* floats - added */
+typedef struct {
+    double value;                /* value of double */
+} floatNodeType;
+
 /* identifiers */
 typedef struct {
-    int i;                      /* subscript to sym array */
+    symbol_entry* i;                    /* variable name - changed JWJ */
 } idNodeType;
 
 /* operators */
@@ -24,9 +31,13 @@ typedef struct nodeTypeTag {
     /* because operNodeType may dynamically increase */
     union {
         conNodeType con;        /* constants */
+        floatNodeType fl;       /* floats */
         idNodeType id;          /* identifiers */
         oprNodeType opr;        /* operators */
     };
 } nodeType;
 
-extern int sym[26];
+#define TYPE_INT   1
+#define TYPE_FLOAT 2
+
+/* removed extern int sym[26]; JWJ */

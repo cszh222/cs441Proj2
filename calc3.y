@@ -2,29 +2,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include "calc3.h"
+#include "symbol_table.h"
 
 /* prototypes */
 nodeType *opr(int oper, int nops, ...);
-nodeType *id(int i);
-nodeType *con(int value);
+nodeType *id(char* i);
+nodeType *integer(int value);
+nodeType *doub(double value);
+nodeType *newId(char* i);
 void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
 
+int lineno;
+
 void yyerror(char *s);
-int sym[26];                    /* symbol table */
+/*int sym[26]; */                   /* symbol table */
 %}
 
 %union {
     int iValue;                 /* integer value */
-    char sIndex;                /* symbol table index */
+    double fValue;
+    char* sVariable;                /* symbol table index */
     nodeType *nPtr;             /* node pointer */
 };
 
 %token <iValue> INTEGER
-%token <sIndex> VARIABLE
-%token WHILE IF PRINT
+%token <sVariable> VARIABLE
+%token <fValue> DOUBLE
+%token WHILE IF PRINT DO REPEAT UNTIL
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -33,7 +41,7 @@ int sym[26];                    /* symbol table */
 %left '*' '/'
 %nonassoc UMINUS
 
-%type <nPtr> stmt expr stmt_list
+%type <nPtr> stmt expr stmt_list declaration variable
 
 %%
 
@@ -55,6 +63,19 @@ stmt:
         | IF '(' expr ')' stmt %prec IFX { $$ = opr(IF, 2, $3, $5); }
         | IF '(' expr ')' stmt ELSE stmt { $$ = opr(IF, 3, $3, $5, $7); }
         | '{' stmt_list '}'              { $$ = $2; }
+        | declaration ';'                { $$ = $1;}
+        | DO stmt WHILE '(' expr ')'     { $$ = opr(DO, 2, $2, opr(WHILE, 2, $5, $2));}
+        | REPEAT stmt UNTIL '(' expr ')' { $$ = opr(REPEAT, 2, $2, opr(UNTIL, 2, $5, $2));}
+        ;
+
+declaration:   INTEGER variable          {$$ = opr(INTEGER, 1, $2);}
+            | DOUBLE variable            {$$ = opr(DOUBLE, 1, $2);}
+            ;
+
+variable: VARIABLE '=' expr ',' variable {$$ = opr(',', 2, opr('=', 2, newId($1), $3), $5);}
+        | VARIABLE  '=' expr             {$$ = opr('=', 2, newId($1), $3);}
+        | VARIABLE ',' variable          {$$ = opr(',', 2, newId($1), $3);}
+        | VARIABLE                       {$$ = newId($1);}
         ;
 
 stmt_list:
@@ -63,7 +84,8 @@ stmt_list:
         ;
 
 expr:
-          INTEGER               { $$ = con($1); }
+          INTEGER               { $$ = integer($1); }
+        | DOUBLE                { $$ = doub($1);  }  
         | VARIABLE              { $$ = id($1); }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         { $$ = opr('+', 2, $1, $3); }
@@ -83,7 +105,12 @@ expr:
 
 #define SIZEOF_NODETYPE ((char *)&p->con - (char *)p)
 
-nodeType *con(int value) {
+int ex(nodeType *p){
+    /*to be implemented later*/
+    return 0;
+}
+
+nodeType *integer(int value) {
     nodeType *p;
     size_t nodeSize;
 
@@ -93,26 +120,77 @@ nodeType *con(int value) {
         yyerror("out of memory");
 
     /* copy information */
-    p->type = typeCon;
+    p->type = typeInt;
     p->con.value = value;
 
     return p;
 }
 
-nodeType *id(int i) {
+nodeType *doub(double value){
     nodeType *p;
     size_t nodeSize;
 
     /* allocate node */
-    nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
+    nodeSize = SIZEOF_NODETYPE + sizeof(floatNodeType);
     if ((p = malloc(nodeSize)) == NULL)
         yyerror("out of memory");
 
     /* copy information */
-    p->type = typeId;
+    p->type = typeFloat;
+    p->fl.value = value;
+
+    return p;
+}
+
+/*nodeType *id(int i) {
+    nodeType *p;
+    size_t nodeSize;*/
+
+    /* allocate node */
+    /*nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");*/
+
+    /* copy information */
+    /*p->type = typeId;
     p->id.i = i;
 
     return p;
+}*/
+
+nodeType *id(char* i){
+    symbol_entry* entry;
+    if((entry=getSymbolEntry(i)) == 0)
+        yyerror("missing declaration for identifier"); 
+    nodeType *p;
+    size_t nodeSize;
+
+    nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    p->type = typeId;
+    p->id.i = entry;
+
+    return p;
+}
+
+nodeType *newId(char* i){
+    symbol_entry* newEntry = malloc(sizeof(symbol_entry));
+    if(getSymbolEntry(i)!=0)
+        yyerror("identifier has already been declared");
+    newEntry->name = strdup(i);
+    addSymbol(newEntry, lineno);
+
+    nodeType *p;
+    size_t nodeSize;
+
+    nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    p->type = typeId;
+    p->id.i = getSymbolEntry(i);
 }
 
 nodeType *opr(int oper, int nops, ...) {
@@ -154,6 +232,7 @@ void yyerror(char *s) {
 }
 
 int main(void) {
+    lineno = 1;
     yyparse();
     return 0;
 }
