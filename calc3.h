@@ -1,7 +1,8 @@
+#include <stdbool.h>
 #include "symbol_table.h"
 
 typedef enum { typeInt, typeFloat, typeId, typeOpr} nodeEnum; /* added */
-typedef enum {intValType, floatValType, none} valEnum;
+typedef enum {intValType, floatValType, boolValType, none} valEnum;
 /* constants */
 typedef struct {
     int value;                  /* value of constant */
@@ -39,6 +40,7 @@ typedef struct nodeTypeTag {
 
 typedef struct value {
     valEnum type;
+    bool boolVal;
     int intVal;
     double floatVal;
 }value;

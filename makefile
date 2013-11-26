@@ -1,6 +1,6 @@
 GCC = gcc 
 GPP = g++
-CXXFLAGS = -g -Wall 
+CXXFLAGS = -g  
 YACC = bison
 LEX = flex
 YYFLAGS = -y -d

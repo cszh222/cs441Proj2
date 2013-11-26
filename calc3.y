@@ -1,4 +1,5 @@
 %{
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -15,7 +16,7 @@ nodeType *newId(char* i);
 nodeType *declareDoub(nodeType *p);
 nodeType *declareInt(nodeType *p);
 void freeNode(nodeType *p);
-int ex(nodeType *p);
+value* ex(nodeType *p);
 int yylex(void);
 
 int lineno;
@@ -262,7 +263,7 @@ int main(void) {
     return 0;
 }
 
-int ex(nodeType *p) {
+value* ex(nodeType *p) {
     if (!p) return 0;
     switch(p->type) {
     case typeInt:       {
@@ -271,24 +272,38 @@ int ex(nodeType *p) {
                             newVal->intVal = p->con.value;
                             return newVal;
                         }
-    case typeFloat:     return p->fl.value;
-    case typeId:        if (p->id.i->type == TYPE_INT)
-                            return p->id.i->iVal;
-                        else if (p->id.i->type == TYPE_FLOAT)
-                            return p->id.i->fVal;
+    case typeFloat:     {
+                            value* newVal = malloc(sizeof(value));
+                            newVal->type = floatValType;
+                            newVal->floatVal = p->fl.value;
+                            return newVal;
+                        }
+    case typeId:        {
+                        value* newVal = malloc(sizeof(value));
+                        if (p->id.i->type == TYPE_INT){
+                            newVal->type = intValType;
+                            newVal->intVal = p->id.i->iVal;
+                            return newVal;
+                        }
+                        else if (p->id.i->type == TYPE_FLOAT){
+                            newVal->type = floatValType;
+                            newVal->floatVal = p->id.i->fVal;
+                            return newVal;
+                        }
+                        }
     case typeOpr:
         switch(p->opr.oper) {
-        case WHILE:     while(ex(p->opr.op[0]))
+        case WHILE:     while(ex(p->opr.op[0])->boolVal)
                             ex(p->opr.op[1]); 
                         return 0;
         case DO:        do{ 
                            ex(p->opr.op[0]);
                         }
-                        while(ex(p->opr.op[1]));
+                        while(ex(p->opr.op[1])->boolVal);
                         return 0;
         case REPEAT:    do
                             ex(p->opr.op[0]);
-                        while(!ex(p->opr.op[1]));
+                        while(!ex(p->opr.op[1])->boolVal);
                         return 0;
         case INT:       ex(p->opr.op[0]); 
                         return 0;
@@ -297,114 +312,187 @@ int ex(nodeType *p) {
         case ',':       ex(p->opr.op[0]);
                         ex(p->opr.op[1]);
                         return 0;
-        case '=':       if (p->opr.op[0]->id.i->type == TYPE_INT)
-                            return p->opr.op[0]->id.i->iVal = ex(p->opr.op[1]);
-                        else if (p->opr.op[0]->id.i->type == TYPE_FLOAT)
-                            return p->opr.op[0]->id.i->fVal = ex(p->opr.op[1]);
-        case IF:        if (ex(p->opr.op[0]))
+        case '=':       {
+                        value* retval;
+                        if (p->opr.op[0]->id.i->type == TYPE_INT){
+                            retval = ex(p->opr.op[1]);
+                            p->opr.op[0]->id.i->iVal = retval->intVal;
+                           return retval;
+                        }
+                        else if (p->opr.op[0]->id.i->type == TYPE_FLOAT){
+                            retval = ex(p->opr.op[1]);
+                            p->opr.op[0]->id.i->fVal = retval->floatVal;
+                            return retval;
+                        }
+                        }
+        case IF:        if (ex(p->opr.op[0])->boolVal)
                             ex(p->opr.op[1]);
                         else if (p->opr.nops > 2)
                             ex(p->opr.op[2]);
                         return 0;
-        case PRINT:     printf("%d\n", ex(p->opr.op[0])); return 0;
+        case PRINT:     {
+                        value* newVal = ex(p->opr.op[0]);
+                        if(newVal->type == intValType){
+                            printf("%d\n", newVal->intVal);
+                        }
+                        else{
+                            printf("%f\n", newVal->floatVal);
+                        }
+                            fflush(stdout);
+                            return 0;
+                        }
         case ';':       ex(p->opr.op[0]); return ex(p->opr.op[1]);
         case UMINUS:    {
                         value* newVal = ex(p->opr.op[0]);
                         if(newVal->type == intValType)
                            newVal->intVal = -1*newVal->intVal;
                         else
-                            newVal->floatVal = -1*newVal->floatVal
+                            newVal->floatVal = -1*newVal->floatVal;
                         return newVal;
                         }
         case '+':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal + newVal2.intVal;
+                            newVal1->intVal = newVal1->intVal + newVal2->intVal;
                          else
-                            newVal1.floatVal = newVal1.floatVal + newVal2.floatVal;
+                            newVal1->floatVal = newVal1->floatVal + newVal2->floatVal;
                          return newVal1;
                          }
         case '-':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal - newVal2.intVal;
+                            newVal1->intVal = newVal1->intVal - newVal2->intVal;
                          else
-                            newVal1.floatVal = newVal1.floatVal - newVal2.floatVal;
+                            newVal1->floatVal = newVal1->floatVal - newVal2->floatVal;
                          return newVal1;
                          }
         case '*':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal * newVal2.intVal;
+                            newVal1->intVal = newVal1->intVal * newVal2->intVal;
                          else
-                            newVal1.floatVal = newVal1.floatVal * newVal2.floatVal;
+                            newVal1->floatVal = newVal1->floatVal * newVal2->floatVal;
                          return newVal1;
                          }
         case '/':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal / newVal2.intVal;
+                            newVal1->intVal = newVal1->intVal / newVal2->intVal;
                          else
-                            newVal1.floatVal = newVal1.floatVal / newVal2.floatVal;
+                            newVal1->floatVal = newVal1->floatVal / newVal2->floatVal;
                          return newVal1;
                          }
         case '<':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
+                         value* newVal3 = malloc(sizeof(value));
+                         newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal < newVal2.intVal;
+                            if(newVal1->intVal < newVal2->intVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false;                                
                          else
-                            newVal1.floatVal = newVal1.floatVal < newVal2.floatVal;
-                         return newVal1;
+                            if(newVal1->floatVal < newVal2->floatVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false; 
+                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         return newVal3;
                          }
         case '>':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
+                         value* newVal3 = malloc(sizeof(value));
+                         newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal > newVal2.intVal;
+                            if(newVal1->intVal > newVal2->intVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false;                                
                          else
-                            newVal1.floatVal = newVal1.floatVal > newVal2.floatVal;
-                         return newVal1;
+                            if(newVal1->floatVal > newVal2->floatVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false; 
+                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         return newVal3;
                          }
         case GE:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
+                         value* newVal3 = malloc(sizeof(value));
+                         newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal >= newVal2.intVal;
+                            if(newVal1->intVal >= newVal2->intVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false;                                
                          else
-                            newVal1.floatVal = newVal1.floatVal >= newVal2.floatVal;
-                         return newVal1;
+                            if(newVal1->floatVal >= newVal2->floatVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false; 
+                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         return newVal3;
                          }
         case LE:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
+                         value* newVal3 = malloc(sizeof(value));
+                         newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal <= newVal2.intVal;
+                            if(newVal1->intVal <= newVal2->intVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false;                                
                          else
-                            newVal1.floatVal = newVal1.floatVal <= newVal2.floatVal;
-                         return newVal1;
+                            if(newVal1->floatVal <= newVal2->floatVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false; 
+                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         return newVal3;
                          }
         case NE:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
+                         value* newVal3 = malloc(sizeof(value));
+                         newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal != newVal2.intVal;
+                            if(newVal1->intVal != newVal2->intVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false;                                
                          else
-                            newVal1.floatVal = newVal1.floatVal != newVal2.floatVal;
-                         return newVal1;
+                            if(newVal1->floatVal != newVal2->floatVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false; 
+                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         return newVal3;
                          }
         case EQ:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
+                         value* newVal3 = malloc(sizeof(value));
+                         newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            newVal1.intVal = newVal1.intVal == newVal2.intVal;
+                            if(newVal1->intVal == newVal2->intVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false;                                
                          else
-                            newVal1.floatVal = newVal1.floatVal == newVal2.floatVal;
-                         return newVal1;
+                            if(newVal1->floatVal == newVal2->floatVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false; 
+                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         return newVal3;
                          }		
         }
     }

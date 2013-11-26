@@ -40,7 +40,7 @@ extern int lineno;
                 yylval.fValue = atof(yytext);
                 return DOUBLE;
               }
-[1-9][0-9]*.[0-9][0-9]*      {
+[0-9][0-9]*.[0-9][0-9]*      {
                               yylval.fValue = atof(yytext);
                               return DOUBLE;
                              }        
