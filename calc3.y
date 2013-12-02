@@ -3,9 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
+#include <string>
+#include <cstring>
 #include "calc3.h"
 #include "symbol_table.h"
+#include "pstcode.h"
+#include "apm.h"
 
 /* prototypes */
 nodeType *opr(int oper, int nops, ...);
@@ -20,8 +23,9 @@ value* ex(nodeType *p);
 int yylex(void);
 
 int lineno;
+PstackCode myPStack;
 
-void yyerror(char *s);
+void yyerror(std::string s);
 /*int sym[26]; */                   /* symbol table */
 %}
 
@@ -49,7 +53,7 @@ void yyerror(char *s);
 %%
 
 program:
-        function                { exit(0); }
+        function                { myPStack.end_prog(1);}
         ;
 
 function:
@@ -114,7 +118,7 @@ nodeType *integer(int value) {
 
     /* allocate node */
     nodeSize = SIZEOF_NODETYPE + sizeof(conNodeType);
-    if ((p = malloc(nodeSize)) == NULL)
+    if ((p = (nodeType*) malloc(nodeSize)) == NULL)
         yyerror("out of memory");
     
     /* copy information */
@@ -129,7 +133,7 @@ nodeType *doub(double value){
 
     /* allocate node */
     nodeSize = SIZEOF_NODETYPE + sizeof(floatNodeType);
-    if ((p = malloc(nodeSize)) == NULL)
+    if ((p = (nodeType*) malloc(nodeSize)) == NULL)
         yyerror("out of memory");
 
     /* copy information */
@@ -147,7 +151,7 @@ nodeType *id(char* i){
     size_t nodeSize;
 
     nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
-    if ((p = malloc(nodeSize)) == NULL)
+    if ((p = (nodeType*)malloc(nodeSize)) == NULL)
         yyerror("out of memory");
 
     p->type = typeId;
@@ -157,7 +161,7 @@ nodeType *id(char* i){
 }
 
 nodeType *newId(char* i){
-    symbol_entry* newEntry = malloc(sizeof(symbol_entry));
+    symbol_entry* newEntry = (symbol_entry*)malloc(sizeof(symbol_entry));
     nodeType *p;
     size_t nodeSize;
 
@@ -167,7 +171,7 @@ nodeType *newId(char* i){
     addSymbol(newEntry, lineno);
 
     nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
-    if ((p = malloc(nodeSize)) == NULL)
+    if ((p = (nodeType*)malloc(nodeSize)) == NULL)
         yyerror("out of memory");
 
     p->type = typeId;
@@ -185,7 +189,7 @@ nodeType *opr(int oper, int nops, ...) {
     /* allocate node */
     nodeSize = SIZEOF_NODETYPE + sizeof(oprNodeType) +
         (nops - 1) * sizeof(nodeType*);
-    if ((p = malloc(nodeSize)) == NULL)
+    if ((p = (nodeType*)malloc(nodeSize)) == NULL)
         yyerror("out of memory");
 
     /* copy information */
@@ -251,15 +255,18 @@ void freeNode(nodeType *p) {
     free (p);
 }
 
-void yyerror(char *s) {
-    fprintf(stderr, "%s\n", s);
+void yyerror(std::string s) {
+    fprintf(stderr, "%s\n", s.c_str());
     exit(1);
 }
 
 int main(void) {
     pushSymbolTable();
     lineno = 1;
+    myPStack.begin_prog();
     yyparse();
+    myPStack.end_prog(0);
+    myPStack.write("calc3p.apm", 1);
     return 0;
 }
 
@@ -267,19 +274,19 @@ value* ex(nodeType *p) {
     if (!p) return 0;
     switch(p->type) {
     case typeInt:       {
-                            value* newVal = malloc(sizeof(value));
+                            value* newVal = (value*)malloc(sizeof(value));
                             newVal->type = intValType;
                             newVal->intVal = p->con.value;
                             return newVal;
                         }
     case typeFloat:     {
-                            value* newVal = malloc(sizeof(value));
+                            value* newVal = (value*)malloc(sizeof(value));
                             newVal->type = floatValType;
                             newVal->floatVal = p->fl.value;
                             return newVal;
                         }
     case typeId:        {
-                        value* newVal = malloc(sizeof(value));
+                        value* newVal = (value*)malloc(sizeof(value));
                         if (p->id.i->type == TYPE_INT){
                             newVal->type = intValType;
                             newVal->intVal = p->id.i->iVal;
@@ -333,10 +340,22 @@ value* ex(nodeType *p) {
         case PRINT:     {
                         value* newVal = ex(p->opr.op[0]);
                         if(newVal->type == intValType){
-                            printf("%d\n", newVal->intVal);
+                            
+                            myPStack.add(I_CONSTANT);
+                            myPStack.add(newVal->intVal);
+
+                            myPStack.add(I_WRITE);
+                            myPStack.add(1);
+
+                            //printf("%d\n", newVal->intVal);
                         }
                         else{
-                            printf("%f\n", newVal->floatVal);
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(newVal->floatVal);
+
+                            myPStack.add(R_WRITE);
+                            myPStack.add(1);
+                            //printf("%f\n", newVal->floatVal);
                         }
                             fflush(stdout);
                             return 0;
@@ -389,7 +408,7 @@ value* ex(nodeType *p) {
         case '<':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         value* newVal3 = malloc(sizeof(value));
+                         value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
                             if(newVal1->intVal < newVal2->intVal)
@@ -407,7 +426,7 @@ value* ex(nodeType *p) {
         case '>':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         value* newVal3 = malloc(sizeof(value));
+                         value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
                             if(newVal1->intVal > newVal2->intVal)
@@ -425,7 +444,7 @@ value* ex(nodeType *p) {
         case GE:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         value* newVal3 = malloc(sizeof(value));
+                         value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
                             if(newVal1->intVal >= newVal2->intVal)
@@ -443,7 +462,7 @@ value* ex(nodeType *p) {
         case LE:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         value* newVal3 = malloc(sizeof(value));
+                         value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
                             if(newVal1->intVal <= newVal2->intVal)
@@ -461,7 +480,7 @@ value* ex(nodeType *p) {
         case NE:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         value* newVal3 = malloc(sizeof(value));
+                         value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
                             if(newVal1->intVal != newVal2->intVal)
@@ -479,7 +498,7 @@ value* ex(nodeType *p) {
         case EQ:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         value* newVal3 = malloc(sizeof(value));
+                         value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
                             if(newVal1->intVal == newVal2->intVal)

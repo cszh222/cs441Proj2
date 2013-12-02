@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "calc3.h"
 #include "y.tab.h"
-#include <string.h>
-void yyerror(char *);
+#include <string>
+void yyerror(std::string s);
 extern int lineno;
 %}
 

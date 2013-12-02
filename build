@@ -24,7 +24,7 @@ bison -y -d calc3.y
 flex calc3.l
 gcc -c y.tab.c lex.yy.c 
 g++ -c symbol_table.cc
-g++ y.tab.o lex.yy.o symbol_table.o -o calc3
+g++ y.tab.o lex.yy.o symbol_table.o -o calc3p
 
 
 
