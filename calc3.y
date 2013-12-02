@@ -53,7 +53,7 @@ void yyerror(std::string s);
 %%
 
 program:
-        function                { myPStack.end_prog(1);}
+        function                {}
         ;
 
 function:
@@ -168,6 +168,7 @@ nodeType *newId(char* i){
     if(getSymbolEntry(i)!=0)
         yyerror("identifier has already been declared");
     newEntry->name = strdup(i);
+    newEntry->size = 1; //this is used to count the number of symbols
     addSymbol(newEntry, lineno);
 
     nodeSize = SIZEOF_NODETYPE + sizeof(idNodeType);
@@ -265,7 +266,7 @@ int main(void) {
     lineno = 1;
     myPStack.begin_prog();
     yyparse();
-    myPStack.end_prog(0);
+    myPStack.end_prog(getCurrentSymbolTableSize());
     myPStack.write("calc3p.apm", 1);
     return 0;
 }
@@ -277,12 +278,16 @@ value* ex(nodeType *p) {
                             value* newVal = (value*)malloc(sizeof(value));
                             newVal->type = intValType;
                             newVal->intVal = p->con.value;
+                            myPStack.add(I_CONSTANT);
+                            myPStack.add(newVal->intVal);
                             return newVal;
                         }
     case typeFloat:     {
                             value* newVal = (value*)malloc(sizeof(value));
                             newVal->type = floatValType;
                             newVal->floatVal = p->fl.value;
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(newVal->floatVal);
                             return newVal;
                         }
     case typeId:        {
@@ -341,18 +346,13 @@ value* ex(nodeType *p) {
                         value* newVal = ex(p->opr.op[0]);
                         if(newVal->type == intValType){
                             
-                            myPStack.add(I_CONSTANT);
-                            myPStack.add(newVal->intVal);
-
                             myPStack.add(I_WRITE);
                             myPStack.add(1);
 
                             //printf("%d\n", newVal->intVal);
                         }
                         else{
-                            myPStack.add(R_CONSTANT);
-                            myPStack.add(newVal->floatVal);
-
+                            
                             myPStack.add(R_WRITE);
                             myPStack.add(1);
                             //printf("%f\n", newVal->floatVal);
