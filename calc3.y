@@ -295,11 +295,17 @@ value* ex(nodeType *p) {
                         if (p->id.i->type == TYPE_INT){
                             newVal->type = intValType;
                             newVal->intVal = p->id.i->iVal;
+                            myPStack.add(I_VARIABLE);
+                            myPStack.add(0);
+                            myPStack.add(p->id.i->offset);
                             return newVal;
                         }
                         else if (p->id.i->type == TYPE_FLOAT){
                             newVal->type = floatValType;
                             newVal->floatVal = p->id.i->fVal;
+                            myPStack.add(R_VARIABLE);
+                            myPStack.add(0);
+                            myPStack.add(p->id.i->offset);
                             return newVal;
                         }
                         }
@@ -372,10 +378,14 @@ value* ex(nodeType *p) {
         case '+':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(newVal1->type == intValType)
+                         if(newVal1->type == intValType){
+                            myPStack.add(I_ADD);
                             newVal1->intVal = newVal1->intVal + newVal2->intVal;
-                         else
+                        }
+                         else{
+                            myPStack.add(R_ADD);
                             newVal1->floatVal = newVal1->floatVal + newVal2->floatVal;
+                        }
                          return newVal1;
                          }
         case '-':       {

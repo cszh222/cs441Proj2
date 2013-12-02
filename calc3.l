@@ -27,6 +27,15 @@ extern int lineno;
                 return VARIABLE;
               }
 
+[0][.][0]           {
+                yylval.fValue = atof(yytext);
+                return DOUBLE;
+              }
+[1-9][0-9]*[.][0-9][0-9]*      {
+                              yylval.fValue = atof(yytext);
+                              return DOUBLE;
+                             }    
+
 0             {
                 yylval.iValue = atoi(yytext);
                 return INTEGER;
@@ -36,15 +45,6 @@ extern int lineno;
                 yylval.iValue = atoi(yytext);
                 return INTEGER;
               }
-0.0           {
-                yylval.fValue = atof(yytext);
-                return DOUBLE;
-              }
-[0-9][0-9]*.[0-9][0-9]*      {
-                              yylval.fValue = atof(yytext);
-                              return DOUBLE;
-                             }        
-
 [-()<>=+*/;{}.,] {
                 return *yytext;
              }
