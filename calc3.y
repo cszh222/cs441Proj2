@@ -428,13 +428,13 @@ value* ex(nodeType *p) {
                          value* newVal2 = ex(p->opr.op[1]);
                          if(newVal1->type == intValType){
                          
-                            myPStack.add(I_MINUS);
+                            myPStack.add(I_SUBTRACT);
                          
                             newVal1->intVal = newVal1->intVal + newVal2->intVal;
                         }
                          else{
                             
-                            myPStack.add(R_MINUS);
+                            myPStack.add(R_SUBTRACT);
                             
                             newVal1->floatVal = newVal1->floatVal + newVal2->floatVal;
                         }
@@ -525,7 +525,7 @@ value* ex(nodeType *p) {
                          
                          return newVal3;
                          }
-        case GE:        {
+        case GE:    {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
                          value* newVal3 = (value*)malloc(sizeof(value));
@@ -558,33 +558,108 @@ value* ex(nodeType *p) {
                             myPStack.add(1);
                             myPStack.add(I_OR);
                             myPStack.at(secondAddr - 1) = myPStack.pos();
-                         }                            
-                         else
+                         }
+                         
+                         else{
                             if(newVal1->floatVal >= newVal2->floatVal)
                                 newVal3->boolVal = true;
                             else
-                                newVal3->boolVal = false; 
-                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                                newVal3->boolVal = false;
+                                
+                            myPStack.add(R_EQUAL);
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(0);
+                            myPStack.add(R_EQUAL);
+                            myPStack.add(R_JMP_IF_FALSE);
+                            myPStack.add(0);
+                            int initAddr = myPStack.pos();
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(0);
+                            myPStack.add(R_AND);
+                            ex(p->opr.op[0]);
+                            myPStack.add(R_OR);
+                            ex(p->opr.op[1]);
+                            myPStack.add(R_GREATER);
+                            myPStack.add(R_JMP);
+                            myPStack.add(0);
+                            int secondAddr = myPStack.pos();
+                            myPStack.at(initAddr - 1) = myPStack.pos();
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(1);
+                            myPStack.add(R_OR);
+                            myPStack.at(secondAddr - 1) = myPStack.pos();
+                            
                          return NULL;
                          }
-        case LE:        {
+                    }
+        case LE:    {
+        
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
                          value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
-                         if(newVal1->type == intValType)
-                            if(newVal1->intVal <= newVal2->intVal)
-                                newVal3->boolVal = true;
-                            else
-                                newVal3->boolVal = false;                                
-                         else
-                            if(newVal1->floatVal <= newVal2->floatVal)
+                         if(newVal1->type == intValType){
+                           if(newVal1->intVal <= newVal2->intVal)
                                 newVal3->boolVal = true;
                             else
                                 newVal3->boolVal = false; 
-                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
-                         return newVal3;
+                            
+                            myPStack.add(I_EQUAL);
+                            myPStack.add(I_CONSTANT);
+                            myPStack.add(0);
+                            myPStack.add(I_EQUAL);
+                            myPStack.add(I_JMP_IF_FALSE);
+                            myPStack.add(0);
+                            int initAddr = myPStack.pos();
+                            myPStack.add(I_CONSTANT);
+                            myPStack.add(0);
+                            myPStack.add(I_AND);
+                            ex(p->opr.op[0]);
+                            myPStack.add(I_OR);
+                            ex(p->opr.op[1]);
+                            myPStack.add(I_LESS);
+                            myPStack.add(I_JMP);
+                            myPStack.add(0);
+                            int secondAddr = myPStack.pos();
+                            myPStack.at(initAddr - 1) = myPStack.pos();
+                            myPStack.add(I_CONSTANT);
+                            myPStack.add(1);
+                            myPStack.add(I_OR);
+                            myPStack.at(secondAddr - 1) = myPStack.pos();
                          }
+                         
+                         else {
+                            if(newVal1->floatVal <= newVal2->floatVal)
+                                newVal3->boolVal = true;
+                            else
+                                newVal3->boolVal = false;
+                                
+                            myPStack.add(R_EQUAL);
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(0);
+                            myPStack.add(R_EQUAL);
+                            myPStack.add(R_JMP_IF_FALSE);
+                            myPStack.add(0);
+                            int initAddr = myPStack.pos();
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(0);
+                            myPStack.add(R_AND);
+                            ex(p->opr.op[0]);
+                            myPStack.add(R_OR);
+                            ex(p->opr.op[1]);
+                            myPStack.add(R_LESS);
+                            myPStack.add(R_JMP);
+                            myPStack.add(0);
+                            int secondAddr = myPStack.pos();
+                            myPStack.at(initAddr - 1) = myPStack.pos();
+                            myPStack.add(R_CONSTANT);
+                            myPStack.add(1);
+                            myPStack.add(R_OR);
+                            myPStack.at(secondAddr - 1) = myPStack.pos();
+                            
+                         return NULL;
+                         }
+                    }
         case NE:        {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
