@@ -379,11 +379,15 @@ value* ex(nodeType *p) {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
                          if(newVal1->type == intValType){
+                         
                             myPStack.add(I_ADD);
+                         
                             newVal1->intVal = newVal1->intVal + newVal2->intVal;
                         }
                          else{
+                         
                             myPStack.add(R_ADD);
+                         
                             newVal1->floatVal = newVal1->floatVal + newVal2->floatVal;
                         }
                          return newVal1;
@@ -391,28 +395,52 @@ value* ex(nodeType *p) {
         case '-':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(newVal1->type == intValType)
-                            newVal1->intVal = newVal1->intVal - newVal2->intVal;
-                         else
-                            newVal1->floatVal = newVal1->floatVal - newVal2->floatVal;
+                         if(newVal1->type == intValType){
+                         
+                            myPStack.add(I_MINUS);
+                         
+                            newVal1->intVal = newVal1->intVal + newVal2->intVal;
+                        }
+                         else{
+                            
+                            myPStack.add(R_MINUS);
+                            
+                            newVal1->floatVal = newVal1->floatVal + newVal2->floatVal;
+                        }
                          return newVal1;
                          }
         case '*':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(newVal1->type == intValType)
-                            newVal1->intVal = newVal1->intVal * newVal2->intVal;
-                         else
-                            newVal1->floatVal = newVal1->floatVal * newVal2->floatVal;
+                         if(newVal1->type == intValType){
+                         
+                            myPStack.add(I_MULTIPLY);
+                          
+                            newVal1->intVal = newVal1->intVal + newVal2->intVal;
+                        }
+                         else{
+                         
+                            myPStack.add(R_MULTIPLY);
+                            
+                            newVal1->floatVal = newVal1->floatVal + newVal2->floatVal;
+                        }
                          return newVal1;
                          }
         case '/':       {
                          value* newVal1 = ex(p->opr.op[0]);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(newVal1->type == intValType)
-                            newVal1->intVal = newVal1->intVal / newVal2->intVal;
-                         else
-                            newVal1->floatVal = newVal1->floatVal / newVal2->floatVal;
+                         if(newVal1->type == intValType){
+                         
+                            myPStack.add(I_DIVIDE);
+                         
+                            newVal1->intVal = newVal1->intVal + newVal2->intVal;
+                        }
+                         else{
+                         
+                            myPStack.add(R_DIVIDE);
+                            
+                            newVal1->floatVal = newVal1->floatVal + newVal2->floatVal;
+                        }
                          return newVal1;
                          }
         case '<':       {
@@ -421,16 +449,22 @@ value* ex(nodeType *p) {
                          value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            if(newVal1->intVal < newVal2->intVal)
-                                newVal3->boolVal = true;
-                            else
-                                newVal3->boolVal = false;                                
+                         //   if(newVal1->intVal < newVal2->intVal)
+                         //       newVal3->boolVal = true;
+                         //   else
+                         //       newVal3->boolVal = false;
+                         
+                            myPStack.add(I_LESS);
+                         
                          else
-                            if(newVal1->floatVal < newVal2->floatVal)
-                                newVal3->boolVal = true;
-                            else
-                                newVal3->boolVal = false; 
-                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         //   if(newVal1->floatVal < newVal2->floatVal)
+                         //       newVal3->boolVal = true;
+                         //   else
+                         //       newVal3->boolVal = false;
+                         //       newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+
+                            myPStack.add(R_LESS);
+                         
                          return newVal3;
                          }
         case '>':       {
@@ -439,16 +473,22 @@ value* ex(nodeType *p) {
                          value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            if(newVal1->intVal > newVal2->intVal)
-                                newVal3->boolVal = true;
-                            else
-                                newVal3->boolVal = false;                                
+                         //   if(newVal1->intVal > newVal2->intVal)
+                         //       newVal3->boolVal = true;
+                         //   else
+                         //       newVal3->boolVal = false;
+                         
+                            myPStack.add(I_GREATER);
+                         
                          else
-                            if(newVal1->floatVal > newVal2->floatVal)
-                                newVal3->boolVal = true;
-                            else
-                                newVal3->boolVal = false; 
-                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         //   if(newVal1->floatVal > newVal2->floatVal)
+                         //       newVal3->boolVal = true;
+                         //   else
+                         //       newVal3->boolVal = false; 
+                         //   newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         
+                            myPStack.add(R_GREATER);
+                         
                          return newVal3;
                          }
         case GE:        {
@@ -511,16 +551,22 @@ value* ex(nodeType *p) {
                          value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType)
-                            if(newVal1->intVal == newVal2->intVal)
-                                newVal3->boolVal = true;
-                            else
-                                newVal3->boolVal = false;                                
+                         //   if(newVal1->intVal == newVal2->intVal)
+                         //       newVal3->boolVal = true;
+                         //   else
+                         //       newVal3->boolVal = false;
+                         
+                         myPStack.add(I_EQUAL);
+                         
                          else
-                            if(newVal1->floatVal == newVal2->floatVal)
-                                newVal3->boolVal = true;
-                            else
-                                newVal3->boolVal = false; 
-                            newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         //   if(newVal1->floatVal == newVal2->floatVal)
+                         //      newVal3->boolVal = true;
+                         //   else
+                         //       newVal3->boolVal = false; 
+                         //   newVal1->floatVal = newVal1->floatVal < newVal2->floatVal;
+                         
+                         myPStack.add(R_EQUAL);
+                         
                          return newVal3;
                          }		
         }
