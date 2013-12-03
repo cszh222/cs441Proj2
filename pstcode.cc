@@ -224,20 +224,20 @@ int PstackCode::pos() const
 	return code.size();
 }
 
-int PstackCode::at(int p) const
+/*int PstackCode::at(int p) const
 {
 	return code[p].Integer;
-}
+}*/
 
 int &PstackCode::at(int p)
 {
 	return code[p].Integer;
 }
 
-float PstackCode::f_at(int p) const
+/*float PstackCode::f_at(int p) const
 {
 	return code[p].Real;
-}
+}*/
 
 float &PstackCode::f_at(int p)
 {

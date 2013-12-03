@@ -76,10 +76,10 @@ class PstackCode
 	virtual int pos(void) const;
 
 	// Return a reference to the instruction at the specified position.
-	virtual int at(int p) const;
+	//virtual int at(int p) const;
 	virtual int &at(int p);
   // Return a reference to a float stored at the specified position.
-  virtual float f_at(int p) const;
+  //virtual float f_at(int p) const;
   virtual float &f_at(int p);
     private:
 	std::vector<WORD> code;
