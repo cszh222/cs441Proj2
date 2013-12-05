@@ -428,6 +428,7 @@ value* ex(nodeType *p) {
         case ';':       ex(p->opr.op[0]); return ex(p->opr.op[1]);
         case UMINUS:    {
                         value* newVal = ex(p->opr.op[0]);                        
+
                         if(newVal->type == intValType){
                           if(p->opr.op[0]->type == typeId){
                             ex(p->opr.op[0]);
@@ -458,11 +459,8 @@ value* ex(nodeType *p) {
                         }
         case '+':       {
                          value* newVal2 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal1 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
+
                          if(newVal1->type == intValType){
                          
                             myPStack.add(I_ADD);
@@ -479,11 +477,8 @@ value* ex(nodeType *p) {
                          }
         case '-':       {
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
+
                          if(newVal1->type == intValType){
                          
                             myPStack.add(I_SUBTRACT);
@@ -500,11 +495,8 @@ value* ex(nodeType *p) {
                          }
         case '*':       {
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
+
                          if(newVal1->type == intValType){
                          
                             myPStack.add(I_MULTIPLY);
@@ -521,11 +513,8 @@ value* ex(nodeType *p) {
                          }
         case '/':       {
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
+
                          if(newVal1->type == intValType){
                          
                             myPStack.add(I_DIVIDE);
@@ -542,13 +531,7 @@ value* ex(nodeType *p) {
                          }
         case '<':       {
                          value* newVal2 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal1 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
 
                          value* newVal3 = (value*)malloc(sizeof(value));
                          newVal3->type = boolValType;
@@ -576,12 +559,9 @@ value* ex(nodeType *p) {
                          }
         case '>':       {
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal3 = (value*)malloc(sizeof(value));
+
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType){
                             if(newVal1->intVal > newVal2->intVal)
@@ -606,12 +586,9 @@ value* ex(nodeType *p) {
                          }
         case GE:    {
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal3 = (value*)malloc(sizeof(value));
+
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType){
                            if(newVal1->intVal >= newVal2->intVal)
@@ -678,12 +655,9 @@ value* ex(nodeType *p) {
         case LE:    {
         
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal3 = (value*)malloc(sizeof(value));
+
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType){
                            if(newVal1->intVal <= newVal2->intVal)
@@ -749,12 +723,9 @@ value* ex(nodeType *p) {
                     }
         case NE:        {
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal3 = (value*)malloc(sizeof(value));
+
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType){
                             if(newVal1->intVal != newVal2->intVal)
@@ -778,12 +749,9 @@ value* ex(nodeType *p) {
                          }
         case EQ:        {
                          value* newVal1 = ex(p->opr.op[0]);
-                         if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal2 = ex(p->opr.op[1]);
-                         if(p->opr.op[1]->type == typeId)
-                            myPStack.add(I_VALUE);
                          value* newVal3 = (value*)malloc(sizeof(value));
+
                          newVal3->type = boolValType;
                          if(newVal1->type == intValType){
                             if(newVal1->intVal == newVal2->intVal)
