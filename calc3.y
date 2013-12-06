@@ -19,7 +19,7 @@ nodeType *newId(char* i);
 nodeType *declareDoub(nodeType *p);
 nodeType *declareInt(nodeType *p);
 void freeNode(nodeType *p);
-value* ex(nodeType *p);
+int ex(nodeType *p);
 int yylex(void);
 
 int lineno;
@@ -271,50 +271,38 @@ int main(void) {
     return 0;
 }
 
-value* ex(nodeType *p) {
+int ex(nodeType *p) {
     if (!p) return 0;
     switch(p->type) {
     case typeInt:       {
-                            value* newVal = (value*)malloc(sizeof(value));
-                            newVal->type = intValType;
-                            newVal->intVal = p->con.value;
-                            
                             myPStack.add(I_CONSTANT);
-                            myPStack.add(newVal->intVal);
+                            myPStack.add(p->con.value);
                             
-                            return newVal;
+                            return 0;
                         }
     case typeFloat:     {
-                            value* newVal = (value*)malloc(sizeof(value));
-                            newVal->type = floatValType;
-                            newVal->floatVal = p->fl.value;
-                            
                             myPStack.add(R_CONSTANT);
-                            myPStack.add(newVal->floatVal);
+                            myPStack.add(p->fl.value);
                             
                             return newVal;
                         }
     case typeId:        {
-                        value* newVal = (value*)malloc(sizeof(value));
                         if (p->id.i->type == TYPE_INT){
-                            newVal->type = intValType;
-                            newVal->intVal = p->id.i->iVal;
-                            
+                                                      
                             myPStack.add(I_VARIABLE);
-                            myPStack.add(0);
+                            myPStack.add(p->id.i->blk_level);
                             myPStack.add(p->id.i->offset);
+			    myPStack.add(I_VALUE);
                             
-                            return newVal;
+                            return 0;
                         }
                         else if (p->id.i->type == TYPE_FLOAT){
-                            newVal->type = floatValType;
-                            newVal->floatVal = p->id.i->fVal;
-                            
+                                                      
                             myPStack.add(R_VARIABLE);
-                            myPStack.add(0);
+                            myPStack.add(p->id.i->blk_level);
                             myPStack.add(p->id.i->offset);
-                            
-                            return newVal;
+                            myPStack.add(R_VALUE);
+                            return 0;
                         }
                         }
     case typeOpr:
@@ -364,21 +352,23 @@ value* ex(nodeType *p) {
                         ex(p->opr.op[1]);
                         return 0;
         case '=':       {
-                        value* retval;
-                        ex(p->opr.op[0]);
-                        if (p->opr.op[0]->id.i->type == TYPE_INT){
-                            retval = ex(p->opr.op[1]);
-                            p->opr.op[0]->id.i->iVal = retval->intVal;
-                            
+			if (p->opr.op[0]->id.i->type == TYPE_INT){
+                            myPStack.add(I_VARIABLE);
+			    myPStack.add(p->opr.op[0]->id.i->blk_level);
+			    myPStack.add(p->opr.op[0]->id.i->offset);
+			    
+			    ex(p->opr.op[1]);
+                                                      
                             myPStack.add(I_ASSIGN);
                             myPStack.add(1);
                            
-                            return retval;
+                            return 0;
                         }
                         else if (p->opr.op[0]->id.i->type == TYPE_FLOAT){
-                            retval = ex(p->opr.op[1]);
-                            p->opr.op[0]->id.i->fVal = retval->floatVal;
-                            
+                            myPStack.add(R_VARIABLE);
+			    myPStack.add(p->opr.op[0]->id.i->blk_level);
+			    myPStack.add(p->opr.op[0]->id.i->offset);
+                                                        
                             myPStack.add(R_ASSIGN);
                             myPStack.add(1);
                             
@@ -406,9 +396,6 @@ value* ex(nodeType *p) {
                         return 0;
                         }
         case PRINT:     {
-                        value* newVal = ex(p->opr.op[0]);
-                        if(p->opr.op[0]->type == typeId)
-                            myPStack.add(I_VALUE);
                         if(newVal->type == intValType){
                             
                             myPStack.add(I_WRITE);
@@ -422,43 +409,44 @@ value* ex(nodeType *p) {
                             myPStack.add(1);
                             //printf("%f\n", newVal->floatVal);
                         }
-                            fflush(stdout);
                             return 0;
                         }
         case ';':       ex(p->opr.op[0]); return ex(p->opr.op[1]);
-        case UMINUS:    {
-                        value* newVal = ex(p->opr.op[0]);                        
+        case UMINUS:    {             
+			if(p->opr.op[0]->type == typeId){
+                       	   symbol_entry* sym = p->opr.op[0]->id.i;
+			   if(sym->type == TYPE_INT){
+				myPStack.add(I_VARIABLE);
+				myPStack.add(sym->blk_level);
+				myPStack.add(sym->offset);
+				
+				ex(p->opr.op[0]);
 
-                        if(newVal->type == intValType){
-                          if(p->opr.op[0]->type == typeId){
-                            ex(p->opr.op[0]);
-                            myPStack.add(I_VALUE);
-                            myPStack.add(I_MINUS);
-                            myPStack.add(I_ASSIGN);
-                            myPStack.add(1);
-                            ex(p->opr.op[0]);
-                          }
-                          else
-                            myPStack.add(I_MINUS);
-                          newVal->intVal = -1*newVal->intVal;
-                          }
-                        else{
-                         if(p->opr.op[0]->type == typeId){
-                            ex(p->opr.op[0]);
-                            myPStack.add(R_VALUE);
-                            myPStack.add(R_MINUS);
-                            myPStack.add(R_ASSIGN);
-                            myPStack.add(1);
-                            ex(p->opr.op[0]);
-                           }
-                           else
-                            myPStack.add(R_MINUS);
-                            newVal->floatVal = -1*newVal->floatVal;
-                         }
-                        return newVal;
+				myPStack.add(I_MINUS);
+				myPStack.add(I_ASSIGN);
+				myPStack.add(1);
+			   }
+			   else if(sym->type == TYPE_FLOAT){
+			   	myPStack.add(R_VARIABLE);
+				myPStack.add(sym->blk_level);
+				myPStack.add(sym->offset);
+		
+				ex(p->opr.op[0]);
+				
+				myPStack.add(R_MINUS);
+				myPStack.add(R_ASSIGN);
+				myPStack.add(1);
+			   }    
+                        }
+			else{
+			   if(p->opr.op[0]->typeInt){
+			   }
+			}
+                                                 
+                        return 0;
                         }
         case '+':       {
-                         value* newVal2 = ex(p->opr.op[0]);
+                          = ex(p->opr.op[0]);
                          value* newVal1 = ex(p->opr.op[1]);
 
                          if(newVal1->type == intValType){
@@ -466,7 +454,7 @@ value* ex(nodeType *p) {
                             myPStack.add(I_ADD);
                          
                             newVal1->intVal = newVal1->intVal + newVal2->intVal;
-                        }
+                         }
                          else{
                          
                             myPStack.add(R_ADD);
