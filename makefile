@@ -27,4 +27,4 @@ lex.yy.cc: calc3.l
 	$(LEX) $(LEXFLAGS) lex.yy.cc calc3.l 
 
 clean: 
-	rm -rf y.tab.o y.tab.h y.tab.cc lex.yy.o lex.yy.cc symbol_table.o pst.o calc3p
+	rm -rf y.tab.o y.tab.h y.tab.cc lex.yy.o lex.yy.cc symbol_table.o pst.o calc3p calc3p.amp calc3p.z.apm
