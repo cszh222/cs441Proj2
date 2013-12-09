@@ -31,8 +31,8 @@ void yyerror(std::string s);
 
 %union {
     int iValue;                 /* integer value */
-    double fValue;
-    char* sVariable;                /* symbol table index */
+    float fValue;               /*float value*/
+    char* sVariable;                /* identifier name */
     nodeType *nPtr;             /* node pointer */
 };
 
@@ -40,6 +40,7 @@ void yyerror(std::string s);
 %token <sVariable> VARIABLE
 %token <fValue> DOUBLE
 %token WHILE IF PRINT DO REPEAT UNTIL INT DOUB
+%token BG ED 
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -48,7 +49,7 @@ void yyerror(std::string s);
 %left '*' '/'
 %nonassoc UMINUS
 
-%type <nPtr> stmt expr stmt_list declaration variable
+%type <nPtr> stmt expr stmt_list declaration variable blk
 
 %%
 
@@ -63,6 +64,7 @@ function:
 
 stmt:
           ';'                            { $$ = opr(';', 2, NULL, NULL); }
+        | blk                            { $$ = $1;}
         | expr ';'                       { $$ = $1; }
         | PRINT expr ';'                 { $$ = opr(PRINT, 1, $2); }
         | VARIABLE '=' expr ';'          { $$ = opr('=', 2, id($1), $3); }
@@ -74,6 +76,8 @@ stmt:
         | DO stmt WHILE '(' expr ')'     { $$ = opr(DO, 2, $2, $5);}
         | REPEAT stmt UNTIL '(' expr ')' { $$ = opr(REPEAT, 2, $2, $5);}
         ;
+
+blk:    {pushSymbolTable(); } BG stmt_list ED {$$ = opr(BG, 1, $3); popSymbolTable();}
 
 declaration:   INT variable            {$$ = opr(INT, 1, declareInt($2));}
             | DOUB variable            {$$ = opr(DOUB, 1, declareDoub($2));}
@@ -165,8 +169,10 @@ nodeType *newId(char* i){
     nodeType *p;
     size_t nodeSize;
 
-    if(getSymbolEntry(i)!=0)
-        yyerror("identifier has already been declared");
+    if(getSymbolEntry(i)!=0){
+        if(getSymbolEntry(i)->blk_level == getCurrentLevel())
+            yyerror("identifier has already been declared");
+    }
     newEntry->name = strdup(i);
     newEntry->size = 1; //this is used to count the number of symbols
     addSymbol(newEntry, lineno);
@@ -307,6 +313,11 @@ int ex(nodeType *p) {
                         }
     case typeOpr:
         switch(p->opr.oper) {
+        case BG:        {
+                        ex(p->opr.op[0]);
+                        
+                        return 0;
+                        }
         case WHILE:     {
                         ex(p->opr.op[0]);   
                         int jmpAddr = myPStack.pos();                     

@@ -21,6 +21,8 @@ extern int lineno;
 "do"            return DO;
 "repeat"        return REPEAT;
 "until"         return UNTIL;
+"begin"         return BG;
+"end"           return ED;
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
                 yylval.sVariable = strdup(yytext);

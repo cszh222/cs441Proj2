@@ -48,13 +48,15 @@
      UNTIL = 266,
      INT = 267,
      DOUB = 268,
-     IFX = 269,
-     ELSE = 270,
-     NE = 271,
-     EQ = 272,
-     LE = 273,
-     GE = 274,
-     UMINUS = 275
+     BG = 269,
+     ED = 270,
+     IFX = 271,
+     ELSE = 272,
+     NE = 273,
+     EQ = 274,
+     LE = 275,
+     GE = 276,
+     UMINUS = 277
    };
 #endif
 
@@ -68,14 +70,14 @@ typedef union YYSTYPE
 #line 32 "calc3.y"
 
     int iValue;                 /* integer value */
-    double fValue;
-    char* sVariable;                /* symbol table index */
+    float fValue;               /*float value*/
+    char* sVariable;                /* identifier name */
     nodeType *nPtr;             /* node pointer */
 
 
 
 /* Line 2068 of yacc.c  */
-#line 79 "y.tab.hh"
+#line 81 "y.tab.hh"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
