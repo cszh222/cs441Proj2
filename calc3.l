@@ -23,6 +23,7 @@ extern int lineno;
 "until"         return UNTIL;
 "begin"         return BG;
 "end"           return ED;
+"procedure"     return PROCEDURE;
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
                 yylval.sVariable = strdup(yytext);

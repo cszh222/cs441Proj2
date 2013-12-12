@@ -14,8 +14,9 @@
 nodeType *opr(int oper, int nops, ...);
 nodeType *id(char* i);
 nodeType *integer(int value);
-nodeType *doub(double value);
-nodeType *newId(char* i);
+nodeType *doub(float value);
+nodeType *newId(const char* i);
+nodeType *declareProc(nodeType *p);
 nodeType *declareDoub(nodeType *p);
 nodeType *declareInt(nodeType *p);
 void freeNode(nodeType *p);
@@ -39,7 +40,7 @@ void yyerror(std::string s);
 %token <iValue> INTEGER
 %token <sVariable> VARIABLE
 %token <fValue> DOUBLE
-%token WHILE IF PRINT DO REPEAT UNTIL INT DOUB
+%token WHILE IF PRINT DO REPEAT UNTIL INT DOUB PROCEDURE CALL
 %token BG ED 
 %nonassoc IFX
 %nonassoc ELSE
@@ -49,7 +50,7 @@ void yyerror(std::string s);
 %left '*' '/'
 %nonassoc UMINUS
 
-%type <nPtr> stmt expr stmt_list declaration variable blk
+%type <nPtr> stmt expr stmt_list declaration variable blk procedure call
 
 %%
 
@@ -64,20 +65,31 @@ function:
 
 stmt:
           ';'                            { $$ = opr(';', 2, NULL, NULL); }
+        | procedure  {pushSymbolTable();} 
+            '{'  stmt_list '}' 
+            { $$ = opr(PROCEDURE, 2, $1, $4);}
+        | call ';'                       { $$ = opr(CALL, 1, $1);}
         | blk                            { $$ = $1;}
-        | expr ';'                       { $$ = $1; }
+        | expr ';'                       { $$ = $1;}
         | PRINT expr ';'                 { $$ = opr(PRINT, 1, $2); }
         | VARIABLE '=' expr ';'          { $$ = opr('=', 2, id($1), $3); }
         | WHILE '(' expr ')' stmt        { $$ = opr(WHILE, 2, $3, $5); }
         | IF '(' expr ')' stmt %prec IFX { $$ = opr(IF, 2, $3, $5); }
         | IF '(' expr ')' stmt ELSE stmt { $$ = opr(IF, 3, $3, $5, $7); }
-        | '{' stmt_list '}'              { $$ = $2; }
+        | '{' stmt_list '}'              { $$ = $2;}
         | declaration ';'                { $$ = $1;}
         | DO stmt WHILE '(' expr ')'     { $$ = opr(DO, 2, $2, $5);}
         | REPEAT stmt UNTIL '(' expr ')' { $$ = opr(REPEAT, 2, $2, $5);}
         ;
 
-blk:    {pushSymbolTable(); } BG stmt_list ED {$$ = opr(BG, 1, $3); popSymbolTable();}
+blk:    {pushSymbolTable(); } 
+            BG stmt_list ED 
+            {$$ = opr(BG, 1, $3);}
+
+procedure: PROCEDURE VARIABLE '(' ')' {$$ = declareProc(newId($2)); }
+
+call: VARIABLE '(' ')'  {$$ = id($1);}
+
 
 declaration:   INT variable            {$$ = opr(INT, 1, declareInt($2));}
             | DOUB variable            {$$ = opr(DOUB, 1, declareDoub($2));}
@@ -116,6 +128,15 @@ expr:
 
 #define SIZEOF_NODETYPE ((char *)&p->con - (char *)p)
 
+
+
+nodeType *declareProc(nodeType *p){
+    symbol_entry *entry = p->id.i;
+    entry->type = TYPE_PROC;
+    return p;
+    
+}
+
 nodeType *integer(int value) {
     nodeType *p;
     size_t nodeSize;
@@ -131,7 +152,7 @@ nodeType *integer(int value) {
     return p;
 }
 
-nodeType *doub(double value){
+nodeType *doub(float value){
     nodeType *p;
     size_t nodeSize;
 
@@ -149,8 +170,35 @@ nodeType *doub(double value){
 
 nodeType *id(char* i){
     symbol_entry* entry;
+
     if((entry=getSymbolEntry(i)) == 0)
-        yyerror("missing declaration for identifier"); 
+        yyerror("missing declaration for identifier");
+
+    if(entry->blk_level != getCurrentLevel()){
+        symbol_entry *new_entry;
+        new_entry = newId(entry->name)->id.i;
+        new_entry->type = entry->type;
+        if(entry->type == TYPE_INT)
+            new_entry->iVal = entry->iVal;
+        else if(entry->type == TYPE_INT)
+            new_entry->fVal = entry->fVal;
+
+        myPStack.add(I_VARIABLE);
+        myPStack.add(getCurrentLevel());
+        myPStack.add(entry->offset);
+
+        myPStack.add(I_VARIABLE);
+        myPStack.add(0);
+        myPStack.add(new_entry->offset);
+
+
+        myPStack.add(I_VALUE);
+        myPStack.add(I_ASSIGN);
+        myPStack.add(1);
+
+        entry = new_entry;
+    }
+
     nodeType *p;
     size_t nodeSize;
 
@@ -164,11 +212,12 @@ nodeType *id(char* i){
     return p;
 }
 
-nodeType *newId(char* i){
+nodeType *newId(const char* i){
     symbol_entry* newEntry = (symbol_entry*)malloc(sizeof(symbol_entry));
     nodeType *p;
     size_t nodeSize;
 
+    printSymbolTable();
     if(getSymbolEntry(i)!=0){
         if(getSymbolEntry(i)->blk_level == getCurrentLevel())
             yyerror("identifier has already been declared");
@@ -263,7 +312,7 @@ void freeNode(nodeType *p) {
 }
 
 void yyerror(std::string s) {
-    fprintf(stderr, "%s\n", s.c_str());
+    fprintf(stderr, "%s on line %d\n", s.c_str(), lineno);
     exit(1);
 }
 
@@ -294,28 +343,68 @@ int ex(nodeType *p) {
                         }
     case typeId:        {
                         if (p->id.i->type == TYPE_INT){
-                                                      
+
                             myPStack.add(I_VARIABLE);
-                            myPStack.add(p->id.i->blk_level);
+                            myPStack.add(0);
                             myPStack.add(p->id.i->offset);
 			                myPStack.add(I_VALUE);
-                            
+                 
                             return TYPE_INT;
                         }
                         else if (p->id.i->type == TYPE_FLOAT){
                                                       
                             myPStack.add(R_VARIABLE);
-                            myPStack.add(p->id.i->blk_level);
+                            myPStack.add(getCurrentLevel() - p->id.i->blk_level);
                             myPStack.add(p->id.i->offset);
                             myPStack.add(R_VALUE);
+
                             return TYPE_FLOAT;
                         }
                         }
     case typeOpr:
         switch(p->opr.oper) {
+        case PROCEDURE: {
+                        symbol_entry* entry = p->opr.op[0]->id.i;
+                        myPStack.add(I_JMP);
+                        myPStack.add(0);
+                        int jmpPos = myPStack.pos()-1;
+
+                        entry->pAddr = myPStack.pos();
+
+                        myPStack.begin_proc();
+                        int patch_loc = myPStack.pos()-2;
+                        ex(p->opr.op[1]);
+                        myPStack.end_proc(patch_loc, getCurrentSymbolTableSize());
+
+                        myPStack.at(jmpPos) = myPStack.pos();
+
+                        popSymbolTable();
+
+                        return 0;
+                        }
+        case CALL:      {
+                        symbol_entry* entry = p->opr.op[0]->id.i;
+                        myPStack.add(I_CALL);
+                        myPStack.add(entry->blk_level);
+                        myPStack.add(entry->pAddr);
+
+                        return 0;
+                        }
         case BG:        {
+                        myPStack.add(I_JMP);
+                        myPStack.add(0);
+                        int jmpPos =  myPStack.pos()-1;
+                        myPStack.begin_proc();
+                        int patch_loc = myPStack.pos()-2;
                         ex(p->opr.op[0]);
+                        myPStack.end_proc(patch_loc, getCurrentSymbolTableSize());
                         
+                        myPStack.at(jmpPos) = myPStack.pos();
+                        myPStack.add(I_CALL);
+                        myPStack.add(0);
+                        myPStack.add(patch_loc-1);
+                        popSymbolTable();
+
                         return 0;
                         }
         case WHILE:     {
@@ -360,7 +449,7 @@ int ex(nodeType *p) {
         case '=':       {
 			             if (p->opr.op[0]->id.i->type == TYPE_INT){
                             myPStack.add(I_VARIABLE);
-			                myPStack.add(p->opr.op[0]->id.i->blk_level);
+			                myPStack.add(0);
 			                myPStack.add(p->opr.op[0]->id.i->offset);
 			    
 			                ex(p->opr.op[1]);
@@ -372,7 +461,7 @@ int ex(nodeType *p) {
                         }
                         else if (p->opr.op[0]->id.i->type == TYPE_FLOAT){
                             myPStack.add(R_VARIABLE);
-			                myPStack.add(p->opr.op[0]->id.i->blk_level);
+			                myPStack.add(0);
 			                myPStack.add(p->opr.op[0]->id.i->offset);
                             
                             ex(p->opr.op[1]);                            
@@ -424,7 +513,10 @@ int ex(nodeType *p) {
                         }
         case '+':       {
                          int valueType = ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);   
+                         int valueType2 = ex(p->opr.op[1]);  
+
+                         if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");                     
                                                                
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_ADD);

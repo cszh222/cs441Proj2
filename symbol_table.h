@@ -15,7 +15,8 @@ struct symbol_entry {
 	int 	offset;
     union { /* Added */
       int iVal;
-      double fVal;
+      float fVal;
+      int pAddr;
     };
 	const char *name; /* changed JWJ */
 };
