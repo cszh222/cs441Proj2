@@ -50,15 +50,19 @@
      DOUB = 268,
      PROCEDURE = 269,
      CALL = 270,
-     BG = 271,
-     ED = 272,
-     IFX = 273,
-     ELSE = 274,
-     NE = 275,
-     EQ = 276,
-     LE = 277,
-     GE = 278,
-     UMINUS = 279
+     FOR = 271,
+     TO = 272,
+     FORINIT = 273,
+     STEP = 274,
+     BG = 275,
+     ED = 276,
+     IFX = 277,
+     ELSE = 278,
+     NE = 279,
+     EQ = 280,
+     LE = 281,
+     GE = 282,
+     UMINUS = 283
    };
 #endif
 
@@ -79,7 +83,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 83 "y.tab.hh"
+#line 87 "y.tab.hh"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

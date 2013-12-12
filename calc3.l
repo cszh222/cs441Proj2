@@ -24,6 +24,10 @@ extern int lineno;
 "begin"         return BG;
 "end"           return ED;
 "procedure"     return PROCEDURE;
+"for"           return FOR;
+"to"            return TO;
+"step"          return STEP;
+":="            return FORINIT;
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
                 yylval.sVariable = strdup(yytext);

@@ -40,7 +40,7 @@ void yyerror(std::string s);
 %token <iValue> INTEGER
 %token <sVariable> VARIABLE
 %token <fValue> DOUBLE
-%token WHILE IF PRINT DO REPEAT UNTIL INT DOUB PROCEDURE CALL
+%token WHILE IF PRINT DO REPEAT UNTIL INT DOUB PROCEDURE CALL FOR TO FORINIT STEP
 %token BG ED 
 %nonassoc IFX
 %nonassoc ELSE
@@ -80,7 +80,9 @@ stmt:
         | declaration ';'                { $$ = $1;}
         | DO stmt WHILE '(' expr ')'     { $$ = opr(DO, 2, $2, $5);}
         | REPEAT stmt UNTIL '(' expr ')' { $$ = opr(REPEAT, 2, $2, $5);}
-        ;
+        | FOR '(' VARIABLE FORINIT expr STEP expr TO expr ')' stmt
+            { $$ = opr(FOR, 5, id($3), $5, $7, $9, $11); }
+        ;        
 
 blk:    {pushSymbolTable(); } 
             BG stmt_list ED 
@@ -219,8 +221,11 @@ nodeType *newId(const char* i){
 
     printSymbolTable();
     if(getSymbolEntry(i)!=0){
-        if(getSymbolEntry(i)->blk_level == getCurrentLevel())
-            yyerror("identifier has already been declared");
+        if(getSymbolEntry(i)->blk_level == getCurrentLevel()){
+            char error[100]; /*assuming noone will declare variables that nears 100 character*/
+            snprintf(error, 100, "Variable already declared \'%s\'", i);
+            yyerror(std::string(error));
+        }
     }
     newEntry->name = strdup(i);
     newEntry->size = 1; //this is used to count the number of symbols
@@ -363,6 +368,57 @@ int ex(nodeType *p) {
                         }
     case typeOpr:
         switch(p->opr.oper) {
+        case FOR:       {   symbol_entry *entry = p->opr.op[0]->id.i;
+                            myPStack.add(I_VARIABLE);
+                            myPStack.add(0);
+                            myPStack.add(entry->offset);
+                            
+                            ex(p->opr.op[1]);
+                            
+                            myPStack.add(I_ASSIGN);
+                            myPStack.add(1);
+
+                            int initpos = myPStack.pos();
+
+                            myPStack.add(I_VARIABLE);
+                            myPStack.add(0);
+                            myPStack.add(entry->offset);
+                            myPStack.add(I_VALUE);
+
+                            ex(p->opr.op[3]);
+
+                            myPStack.add(I_EQUAL);
+                            myPStack.add(I_JMP_IF_TRUE);
+                            int comparepos = myPStack.pos();
+                            myPStack.add(0);
+
+                            ex(p->opr.op[4]);
+
+                            myPStack.add(I_VARIABLE);
+                            myPStack.add(0);
+                            myPStack.add(entry->offset);
+
+                            myPStack.add(I_VARIABLE);
+                            myPStack.add(0);
+                            myPStack.add(entry->offset);
+                            myPStack.add(I_VALUE);
+
+                            ex(p->opr.op[2]);
+
+                            myPStack.add(I_ADD);
+                            myPStack.add(I_ASSIGN);
+                            myPStack.add(1);
+
+                            myPStack.add(I_JMP);
+                            myPStack.add(initpos);
+
+                            myPStack.at(comparepos) = myPStack.pos();  
+
+                            ex(p->opr.op[4]);
+
+                            return 0;                          
+
+                        }
         case PROCEDURE: {
                         symbol_entry* entry = p->opr.op[0]->id.i;
                         myPStack.add(I_JMP);
@@ -451,8 +507,10 @@ int ex(nodeType *p) {
                             myPStack.add(I_VARIABLE);
 			                myPStack.add(0);
 			                myPStack.add(p->opr.op[0]->id.i->offset);
-			    
-			                ex(p->opr.op[1]);
+			             
+			                int valueType = ex(p->opr.op[1]);
+                            if(valueType != TYPE_INT && valueType != typeInt)
+                                yyerror("Assigning float into an int variable");
                                                       
                             myPStack.add(I_ASSIGN);
                             myPStack.add(1);
@@ -464,7 +522,9 @@ int ex(nodeType *p) {
 			                myPStack.add(0);
 			                myPStack.add(p->opr.op[0]->id.i->offset);
                             
-                            ex(p->opr.op[1]);                            
+                            int valueType = ex(p->opr.op[1]);
+                            if(valueType != TYPE_INT && valueType != typeInt)
+                                yyerror("Assigning int into an float variable");                           
                             
                             myPStack.add(R_ASSIGN);
                             myPStack.add(1);
@@ -527,15 +587,9 @@ int ex(nodeType *p) {
                         }
         case '-':       {
                          int valueType = ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
- 
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         } 
-                     
-                          if(valueType != valueType2)
+                         int valueType2 = ex(p->opr.op[1]); 
+         
+                         if(valueType != valueType2)
                             yyerror("Arithmetic or comparison mismatch");
                             
                          if(valueType == TYPE_INT || valueType == typeInt)
@@ -547,14 +601,8 @@ int ex(nodeType *p) {
                          }
         case '*':       {
                          int valueType = ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-    
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         } 
-
+                         int valueType2 = ex(p->opr.op[1]); 
+         
                          if(valueType != valueType2)
                             yyerror("Arithmetic or comparison mismatch");
                             
@@ -567,15 +615,9 @@ int ex(nodeType *p) {
                          }
         case '/':       {
                          int valueType = ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         } 
- 
-                          if(valueType != valueType2)
+                         int valueType2 = ex(p->opr.op[1]); 
+         
+                         if(valueType != valueType2)
                             yyerror("Arithmetic or comparison mismatch");
                             
                          if(valueType == TYPE_INT || valueType == typeInt)
@@ -586,16 +628,9 @@ int ex(nodeType *p) {
                          return valueType;
                          }
         case '<':       {
-                         ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-    
-                         int valueType;
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         } 
-
+                         int valueType = ex(p->opr.op[0]);
+                         int valueType2 = ex(p->opr.op[1]); 
+         
                          if(valueType != valueType2)
                             yyerror("Arithmetic or comparison mismatch");
                             
@@ -607,19 +642,12 @@ int ex(nodeType *p) {
                          return 0;
                          }
         case '>':       {
-                         ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-    
-                         int valueType;
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         } 
- 
-                          if(valueType != valueType2)
+                         int valueType = ex(p->opr.op[0]);
+                         int valueType2 = ex(p->opr.op[1]); 
+         
+                         if(valueType != valueType2)
                             yyerror("Arithmetic or comparison mismatch");
-                            
+                           
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_GREATER);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -628,16 +656,9 @@ int ex(nodeType *p) {
                          return 0;
                          }
         case GE:        {
-                         ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-    
-                         int valueType;
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         }
-                         
+                         int valueType = ex(p->opr.op[0]);
+                         int valueType2 = ex(p->opr.op[1]); 
+         
                          if(valueType != valueType2)
                             yyerror("Arithmetic or comparison mismatch");
                             
@@ -658,18 +679,11 @@ int ex(nodeType *p) {
                          return 0;
                         }
         case LE:        {    
-                         ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-    
-                         int valueType;
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         }
-                         
+                        int valueType = ex(p->opr.op[0]);
+                         int valueType2 = ex(p->opr.op[1]); 
+         
                          if(valueType != valueType2)
-                            yyerror("Arithmetic or comparison mismatch");                       
+                            yyerror("Arithmetic or comparison mismatch");                    
                          
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_EQUAL);
@@ -689,17 +703,11 @@ int ex(nodeType *p) {
                          return 0;
                         }
         case NE:        {
-                         ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-    
-                         int valueType;
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                          
+                         int valueType = ex(p->opr.op[0]);
+                         int valueType2 = ex(p->opr.op[1]); 
+         
                          if(valueType != valueType2)
-                            yyerror("Arithmetic or comparison mismatch");                          } 
+                            yyerror("Arithmetic or comparison mismatch");
                      
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_EQUAL);                         
@@ -710,16 +718,9 @@ int ex(nodeType *p) {
                          return 0;                         
                         }
         case EQ:        {
-                          ex(p->opr.op[0]);
-                         ex(p->opr.op[1]);
-    
-                         int valueType;
-                         if(p->opr.op[0]->type == typeId)            
-                              valueType =p->opr.op[0]->id.i->type;
-                         else{
-                             valueType = p->opr.op[0]->type;
-                         }
-                         
+                         int valueType = ex(p->opr.op[0]);
+                         int valueType2 = ex(p->opr.op[1]); 
+         
                          if(valueType != valueType2)
                             yyerror("Arithmetic or comparison mismatch");
                             
