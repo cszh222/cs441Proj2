@@ -535,6 +535,9 @@ int ex(nodeType *p) {
                              valueType = p->opr.op[0]->type;
                          } 
                      
+                          if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");
+                            
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_SUBTRACT);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -551,7 +554,10 @@ int ex(nodeType *p) {
                          else{
                              valueType = p->opr.op[0]->type;
                          } 
-                     
+
+                         if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");
+                            
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_MULTIPLY);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -568,7 +574,10 @@ int ex(nodeType *p) {
                          else{
                              valueType = p->opr.op[0]->type;
                          } 
-                     
+ 
+                          if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");
+                            
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_DIVIDE);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -586,7 +595,10 @@ int ex(nodeType *p) {
                          else{
                              valueType = p->opr.op[0]->type;
                          } 
-                     
+
+                         if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");
+                            
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_LESS);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -604,7 +616,10 @@ int ex(nodeType *p) {
                          else{
                              valueType = p->opr.op[0]->type;
                          } 
-                     
+ 
+                          if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");
+                            
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_GREATER);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -621,8 +636,11 @@ int ex(nodeType *p) {
                               valueType =p->opr.op[0]->id.i->type;
                          else{
                              valueType = p->opr.op[0]->type;
-                         } 
-                     
+                         }
+                         
+                         if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");
+                            
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_EQUAL);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -648,8 +666,11 @@ int ex(nodeType *p) {
                               valueType =p->opr.op[0]->id.i->type;
                          else{
                              valueType = p->opr.op[0]->type;
-                         } 
-                     
+                         }
+                         
+                         if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");                       
+                         
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_EQUAL);
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
@@ -676,7 +697,9 @@ int ex(nodeType *p) {
                               valueType =p->opr.op[0]->id.i->type;
                          else{
                              valueType = p->opr.op[0]->type;
-                         } 
+                          
+                         if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");                          } 
                      
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_EQUAL);                         
@@ -695,8 +718,11 @@ int ex(nodeType *p) {
                               valueType =p->opr.op[0]->id.i->type;
                          else{
                              valueType = p->opr.op[0]->type;
-                         } 
-                     
+                         }
+                         
+                         if(valueType != valueType2)
+                            yyerror("Arithmetic or comparison mismatch");
+                            
                          if(valueType == TYPE_INT || valueType == typeInt)
                              myPStack.add(I_EQUAL);                         
                          else if (valueType == TYPE_FLOAT || valueType == typeFloat)
