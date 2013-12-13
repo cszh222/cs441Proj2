@@ -46,8 +46,8 @@ typedef struct value {
 }value;
 
 
-#define TYPE_INT   0
-#define TYPE_FLOAT 1
+#define TYPE_INT   7
+#define TYPE_FLOAT 8
 #define TYPE_PROC  9
 
 /* removed extern int sym[26]; JWJ */

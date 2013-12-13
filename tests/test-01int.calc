@@ -1,0 +1,69 @@
+/**
+ *  Test 0
+ *    version for integers
+ *    (Also testing comments!)
+ *    expected output:
+ *    7 
+ *    7 
+ *   42 
+ *   11 
+ *   15 
+ *    1 
+ *    2 
+ *   13 
+ *    1 
+ *   13 
+ */
+int global;
+global = 3;
+
+// First up is some basic begin end assigments with and
+// without declarations!
+begin             // Start the block
+  print (3 + 4);  // Print 7
+end               // End the block
+
+begin          /* Begin the block      */
+  int i;       /* Declare i as an int  */
+  int k;       /* Declare k as an int  */
+  i = 7;       /* Assign 7 to i        */
+  k = 42;       /* Assign  to k         */
+  print i;     /* Print 7              */
+  print k;     /* Print 42              */
+end            /* End the block        */
+
+begin
+  int z;
+  z = 8;
+  print (z+3); // (11)
+  z = z-3;
+  print z*3;   // Test stmts within print (15)
+  print z/5;   // 3
+end
+
+
+/**
+ *  Test nested blocks
+ */
+begin
+  int i;
+  i = 3;
+  begin
+    int i;
+    i = 13;
+    begin
+      int k;
+      k = 2;
+      print k;    //2
+      begin
+        print i;  //13
+       begin
+        int i;
+        i = 1;
+        print i;  // 1  
+       end
+        print i;  // 13
+      end
+    end
+  end
+end

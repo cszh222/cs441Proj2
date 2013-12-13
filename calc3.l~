@@ -6,7 +6,6 @@
 void yyerror(std::string s);
 extern int lineno;
 %}
-%x comment
 
 %%
 ">="            return GE;
@@ -28,13 +27,7 @@ extern int lineno;
 "for"           return FOR;
 "to"            return TO;
 "step"          return STEP;
-"//".*"\n"      lineno++;
-
-"/*"         BEGIN(comment);
-<comment>[^*\n]*        /* eat anything that's not a '*' */
-<comment>"*"+[^*/\n]*   /* eat up '*'s not followed by '/'s */
-<comment>\n             ++lineno;
-<comment>"*"+"/"        BEGIN(INITIAL);
+":="            return FORINIT;
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
                 yylval.sVariable = strdup(yytext);

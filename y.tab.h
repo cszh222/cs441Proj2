@@ -52,17 +52,16 @@
      CALL = 270,
      FOR = 271,
      TO = 272,
-     FORINIT = 273,
-     STEP = 274,
-     BG = 275,
-     ED = 276,
-     IFX = 277,
-     ELSE = 278,
-     NE = 279,
-     EQ = 280,
-     LE = 281,
-     GE = 282,
-     UMINUS = 283
+     STEP = 273,
+     BG = 274,
+     ED = 275,
+     IFX = 276,
+     ELSE = 277,
+     NE = 278,
+     EQ = 279,
+     LE = 280,
+     GE = 281,
+     UMINUS = 282
    };
 #endif
 
@@ -73,7 +72,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 33 "calc3.y"
+#line 36 "calc3.y"
 
     int iValue;                 /* integer value */
     float fValue;               /*float value*/
@@ -83,7 +82,7 @@ typedef union YYSTYPE
 
 
 /* Line 2068 of yacc.c  */
-#line 87 "y.tab.hh"
+#line 86 "y.tab.hh"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

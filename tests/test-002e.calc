@@ -1,0 +1,14 @@
+int a, b, c, d;  // a declaration list 
+d = 1;
+print d;
+begin
+int d;
+a = 1;
+b = 2;
+c = 9;
+d = 10;
+print a;
+print b;
+print c;
+print d*c*(a*a + 2*a*b + b*b); //810
+end

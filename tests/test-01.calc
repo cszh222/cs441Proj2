@@ -1,0 +1,71 @@
+/**
+ *  Test 0
+ *    This test is a basic, but well-rounded, test.
+ *    The idea behind this is to thoroughly test
+ *    every possible statement in the e-calc language.
+ *    (Also testing comments!)
+ *    expected output:
+ *    7 
+ *    7 
+ *    3.142 
+ *   11 
+ *   15 
+ *    1 
+ *    2 
+ *    3.142 
+ *    1 
+ *    3.142  
+ */
+int global;
+global = 3;
+
+// First up is some basic begin end assigments with and
+// without declarations!
+begin             // Start the block
+  print (3 + 4);  // Print 7
+end               // End the block
+
+begin          /* Begin the block      */
+  int i;       /* Declare i as an int  */
+  float k;     /* Declare k as a float */
+  i = 7;       /* Assign 7 to i        */
+  k = 3.142;   /* Assign pi to k       */
+  print i;     /* Print 7              */
+  print k;     /* Print 3.142          */
+end            /* End the block        */
+
+begin
+  int z;
+  z = 8;
+  print (z+3); // (11)
+  z = z-3;
+  print z*3;   // Test stmts within print (15)
+  print z/5;   // 3
+end
+
+
+/**
+ *  Test nested blocks
+ */
+begin
+  int i;
+  i = 3;
+  begin
+    float i;
+    i = 3.142;
+    begin
+      int k;
+      k = 2;
+      print k;    //2
+      begin
+        print i;  //3.142
+       begin
+        int i;
+        i = 1;
+        print i;  // 1  
+       end
+        print i;  // 3.142
+      end
+    end
+  end
+end

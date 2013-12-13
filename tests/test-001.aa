@@ -1,0 +1,34 @@
+0001 Prog varlen:2 addr:4
+0004 I_Variable lev:0 disp:3
+0007 I_Constant value:1
+0009 I_Assign  words:1
+0011 I_Variable lev:0 disp:4
+0014 I_Constant value:2
+0016 I_Assign  words:1
+0018 I_Variable lev:0 disp:3
+0021 I_Value
+0022 I_Write words:1
+0024 I_Variable lev:0 disp:4
+0027 I_Value
+0028 I_Write words:1
+0030 I_Variable lev:0 disp:3
+0033 I_Value
+0034 I_Variable lev:0 disp:3
+0037 I_Value
+0038 I_Multiply
+0039 I_Constant value:2
+0041 I_Variable lev:0 disp:3
+0044 I_Value
+0045 I_Multiply
+0046 I_Variable lev:0 disp:4
+0049 I_Value
+0050 I_Multiply
+0051 I_Add
+0052 I_Variable lev:0 disp:4
+0055 I_Value
+0056 I_Variable lev:0 disp:4
+0059 I_Value
+0060 I_Multiply
+0061 I_Add
+0062 I_Write words:1
+0064 EndProg
