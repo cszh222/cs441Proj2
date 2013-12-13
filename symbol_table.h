@@ -13,6 +13,10 @@ struct symbol_entry {
 	int 	type;
 	int 	size;
 	int 	offset;
+	bool    refetch;
+	bool    scoped;
+	int     prev_type;
+	symbol_entry* relentry;
     union { /* Added */
       int iVal;
       float fVal;

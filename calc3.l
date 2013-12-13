@@ -9,6 +9,20 @@ extern int lineno;
 %x comment
 
 %%
+[ \t\n]+        {
+                    if(strcmp(yytext,"\n") == 0){
+                      lineno++;
+                    }
+                }/* ignore whitespace */
+"//".*"\n"     {lineno++;}
+"/*"           {BEGIN(comment);}
+<comment>{
+"\n"           ++lineno;
+"*/"           BEGIN(INITIAL);
+[^*\n]*        {}/* eat anything that's not a '*' */
+"*"            {}/* eat up '*'s not followed by '/'s */
+}
+
 ">="            return GE;
 "<="            return LE;
 "=="            return EQ;
@@ -18,7 +32,7 @@ extern int lineno;
 "else"          return ELSE;
 "print"         return PRINT;
 "int"           return INT;
-"float"        return DOUB;
+"float"         return DOUB;
 "do"            return DO;
 "repeat"        return REPEAT;
 "until"         return UNTIL;
@@ -28,13 +42,6 @@ extern int lineno;
 "for"           return FOR;
 "to"            return TO;
 "step"          return STEP;
-"//".*"\n"      lineno++;
-
-"/*"         BEGIN(comment);
-<comment>[^*\n]*        /* eat anything that's not a '*' */
-<comment>"*"+[^*/\n]*   /* eat up '*'s not followed by '/'s */
-<comment>\n             ++lineno;
-<comment>"*"+"/"        BEGIN(INITIAL);
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
                 yylval.sVariable = strdup(yytext);
@@ -48,7 +55,9 @@ extern int lineno;
 [1-9][0-9]*[.][0-9][0-9]*      {
                               yylval.fValue = atof(yytext);
                               return DOUBLE;
-                             }    
+                             }
+[.][0-9][0-9]* {yylval.fValue = atof(yytext);
+                return DOUBLE;}    
 
 0             {
                 yylval.iValue = atoi(yytext);
@@ -62,12 +71,6 @@ extern int lineno;
 [-()<>=+*/;{}.,] {
                 return *yytext;
              }
-
-[ \t\n]+        {
-                    if(strcmp(yytext,"\n") == 0){
-                      lineno++;
-                    }
-                }/* ignore whitespace */
 
 .               yyerror("Unknown character");
 %%
