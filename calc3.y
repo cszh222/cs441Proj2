@@ -23,6 +23,7 @@ void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
 bool checkOpError(int op1, int op2);
+bool errorFound;
 
 std::string typeOpError = "Operating between int and float values";
 
@@ -351,6 +352,7 @@ bool checkOpError(int op1, int op2){
 }
 
 void yyerror(std::string s) {
+    errorFound = true;
     printf("%s on line %d\n", s.c_str(), lineno+1);
     yyparse();
 }
@@ -358,6 +360,7 @@ void yyerror(std::string s) {
 int main(void) {
     pushSymbolTable();
     lineno = 1;
+    errorFound = false;
     myPStack.begin_prog();
     yyparse();
     myPStack.end_prog(getCurrentSymbolTableSize());
