@@ -185,7 +185,7 @@ nodeType *doub(float value){
 nodeType *id(char* i){
     symbol_entry* entry;
 
-    if((entry=getSymbolEntry(i)) == 0)
+    if((entry=getSymbolEntry(i)) == NULL)
         yyerror("missing declaration for identifier");
 
     if(entry->blk_level != getCurrentLevel()){
@@ -198,7 +198,7 @@ nodeType *id(char* i){
             new_entry->fVal = entry->fVal;
     if(entry->type == TYPE_INT){
         myPStack.add(I_VARIABLE);
-        myPStack.add(getCurrentLevel());
+        myPStack.add(getCurrentLevel()-entry->blk_level);
         myPStack.add(entry->offset);
 
         myPStack.add(I_VARIABLE);
@@ -212,7 +212,7 @@ nodeType *id(char* i){
     }
     else if(entry->type == TYPE_FLOAT){
         myPStack.add(R_VARIABLE);
-        myPStack.add(getCurrentLevel());
+        myPStack.add(getCurrentLevel()-entry->blk_level);
         myPStack.add(entry->offset);
 
         myPStack.add(R_VARIABLE);
@@ -557,7 +557,7 @@ int ex(nodeType *p) {
 			                myPStack.add(p->opr.op[0]->id.i->offset);
                             
                             int valueType = ex(p->opr.op[1]);
-                            if(valueType != TYPE_INT && valueType != typeInt)
+                            if(valueType != TYPE_FLOAT && valueType != typeFloat)
                                 yyerror("Assigning int into an float variable");                           
                             
                             myPStack.add(R_ASSIGN);

@@ -18,7 +18,7 @@ extern int lineno;
 "else"          return ELSE;
 "print"         return PRINT;
 "int"           return INT;
-"double"        return DOUB;
+"float"        return DOUB;
 "do"            return DO;
 "repeat"        return REPEAT;
 "until"         return UNTIL;
