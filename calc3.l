@@ -7,22 +7,19 @@ void yyerror(std::string s);
 extern int lineno;
 %}
 %x comment
-
+%s block
 %%
-[ \t\n]+        {
-                    if(strcmp(yytext,"\n") == 0){
-                      lineno++;
-                    }
-                }/* ignore whitespace */
-"//".*"\n"     {lineno++;}
+
 "/*"           {BEGIN(comment);}
 <comment>{
-"\n"           ++lineno;
+\n             ++lineno;
 "*/"           BEGIN(INITIAL);
 [^*\n]*        {}/* eat anything that's not a '*' */
 "*"            {}/* eat up '*'s not followed by '/'s */
 }
-
+[ \t]+         {}
+\n             ++lineno;
+"//".*"\n"      {lineno++;}
 ">="            return GE;
 "<="            return LE;
 "=="            return EQ;

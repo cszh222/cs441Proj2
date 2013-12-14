@@ -49,10 +49,10 @@
      INT = 267,
      DOUB = 268,
      PROCEDURE = 269,
-     CALL = 270,
-     FOR = 271,
-     TO = 272,
-     STEP = 273,
+     FOR = 270,
+     TO = 271,
+     STEP = 272,
+     CALL = 273,
      BG = 274,
      ED = 275,
      IFX = 276,
@@ -72,11 +72,11 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 39 "calc3.y"
+#line 41 "calc3.y"
 
     int iValue;                 /* integer value */
     float fValue;               /*float value*/
-    char* sVariable;                /* identifier name */
+    char* sVariable;            /* identifier name */
     nodeType *nPtr;             /* node pointer */
 
 

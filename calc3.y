@@ -1,5 +1,6 @@
 %{
 #include <stdbool.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -25,6 +26,7 @@ int yylex(void);
 bool checkOpError(int op1, int op2);
 bool errorFound;
 bool declaringNewVar;
+int errToken;
 
 std::string typeOpError = "Operating between int and float values";
 
@@ -39,14 +41,14 @@ void yyerror(std::string s);
 %union {
     int iValue;                 /* integer value */
     float fValue;               /*float value*/
-    char* sVariable;                /* identifier name */
+    char* sVariable;            /* identifier name */
     nodeType *nPtr;             /* node pointer */
 };
 
 %token <iValue> INTEGER
 %token <sVariable> VARIABLE
 %token <fValue> DOUBLE
-%token WHILE IF PRINT DO REPEAT UNTIL INT DOUB PROCEDURE CALL FOR TO STEP
+%token WHILE IF PRINT DO REPEAT UNTIL INT DOUB PROCEDURE FOR TO STEP CALL
 %token BG ED 
 %nonassoc IFX
 %nonassoc ELSE
@@ -73,25 +75,27 @@ stmt:
         | procedure  {pushSymbolTable();} 
             '{'  stmt_list '}' 
             { $$ = opr(PROCEDURE, 2, $1, $4);}
-        | call ';'                       { $$ = opr(CALL, 1, $1);}
-        | call error '\n'           
+        | call ';'                       { $$ = opr(CALL, 1, $1);}                    
         | blk                            { $$ = $1;}
-        | expr ';'                       { $$ = $1;}
-        | expr error '\n'              
-        | PRINT expr ';'                 { $$ = opr(PRINT, 1, $2); }
-        | PRINT expr error '\n'    
+        | expr ';'                       { $$ = $1;}                    
+        | PRINT expr ';'                 { $$ = opr(PRINT, 1, $2); }          
         | VARIABLE '=' expr ';'          { $$ = opr('=', 2, id($1), $3); }
         | WHILE '(' expr ')' stmt        { $$ = opr(WHILE, 2, $3, $5); }
         | IF '(' expr ')' stmt %prec IFX { $$ = opr(IF, 2, $3, $5); }
         | IF '(' expr ')' stmt ELSE stmt { $$ = opr(IF, 3, $3, $5, $7); }
-        | '{' stmt_list '}'              { $$ = $2;}
-        | '{' stmt_list error '\n'   
-        | declaration ';'                { $$ = $1;}
-        | declaration error '\n'         
+        | '{' stmt_list '}'              { $$ = $2;}        
+        | declaration ';'                { $$ = $1;}                
         | DO stmt WHILE '(' expr ')'     { $$ = opr(DO, 2, $2, $5);}
         | REPEAT stmt UNTIL '(' expr ')' { $$ = opr(REPEAT, 2, $2, $5);}
         | FOR '(' VARIABLE '=' expr STEP expr TO expr ')' stmt
             { $$ = opr(FOR, 5, id($3), $5, $7, $9, $11); }
+        | call { errToken = yychar;} error '\n' /*error productions*/
+        | expr { errToken = yychar;} error '\n'
+        | '{' stmt_list  { errToken = yychar;} error '\n'  
+        | declaration { errToken = yychar;} error '\n'  
+        | PRINT expr { errToken = yychar;} error '\n'
+        | VARIABLE '=' expr { errToken = yychar;} error '\n'   
+        | '\n' {lineno++;} 
         ;        
 
 blk:    {pushSymbolTable(); progBlkLvl = getCurrentLevel();} 
@@ -107,14 +111,15 @@ call: VARIABLE '(' ')'  {$$ = id($1);}
 
 declaration:   INT variable            {$$ = opr(INT, 1, declareInt($2));}
             | DOUB variable            {$$ = opr(DOUB, 1, declareDoub($2));}
-            | INT error '\n'          
-            | DOUB error '\n'         
+            | INT { errToken = yychar;} error '\n'          
+            | DOUB { errToken = yychar;} error '\n'         
             ;
 
 variable: VARIABLE '=' expr ',' variable {$$ = opr(',', 2, opr('=', 2, newId($1), $3), $5);}
         | VARIABLE  '=' expr             {$$ = opr('=', 2, newId($1), $3);}
         | VARIABLE ',' variable          {$$ = opr(',', 2, newId($1), $3);}
         | VARIABLE                       {$$ = newId($1);}
+        | VARIABLE { errToken = yychar;} error '\n'
         ;
 
 stmt_list:
@@ -138,6 +143,7 @@ expr:
         | expr NE expr          { $$ = opr(NE, 2, $1, $3); }
         | expr EQ expr          { $$ = opr(EQ, 2, $1, $3); }
         | '(' expr ')'          { $$ = $2; }
+        | '(' { errToken = yychar;} error ')'
         ;
 
 %%
@@ -340,8 +346,49 @@ bool checkOpError(int op1, int op2){
 }
 
 void yyerror(std::string s) {
-    errorFound = true;
-    printf("%s on line %d\n", s.c_str(), lineno);
+    std::string tokenName;
+    if(errToken != -1 && errToken != YYEMPTY && s=="syntax error"){
+        switch(errToken){
+        case INTEGER: tokenName = "CONSTANT"; break;
+        case DOUBLE: tokenName = "FLOAT"; break;
+        case VARIABLE: tokenName = "IDENTIFIER"; break;
+        case WHILE: tokenName = "WHILE"; break;
+        case IF: tokenName = "IF"; break;
+        case PRINT: tokenName = "PRINT"; break;
+        case DO: tokenName = "DO"; break;
+        case REPEAT: tokenName = "REPEAT"; break;
+        case UNTIL: tokenName = "UNTIL"; break;
+        case INT: tokenName = "INTTYPE"; break;
+        case DOUB: tokenName = "FLOATTYPE"; break;
+        case PROCEDURE: tokenName = "PROCEDURE"; break;
+        case FOR: tokenName = "FOR"; break;
+        case TO: tokenName = "TO"; break;
+        case BG: tokenName = "BEGINBLOCK"; break;
+        case ED: tokenName = "ENDBLOCK"; break;
+        case IFX: tokenName = "IF"; break;
+        case ELSE: tokenName = "ELSE"; break;
+        case GE: tokenName = ">="; break;
+        case LE: tokenName = "<="; break;
+        case EQ: tokenName = "=="; break;
+        case NE: tokenName = "!="; break;
+        case UMINUS: tokenName = "-"; break;
+        case '+': tokenName = "+"; break;
+        case '-': tokenName = "-"; break;
+        case '*': tokenName = "*"; break;
+        case '/': tokenName = "/"; break;
+        case '>': tokenName = ">"; break;
+        case '<': tokenName = "<"; break;
+        case '=': tokenName = "="; break;
+        }   
+        errToken = -1;
+        printf("syntax error, unexpected %s near line %d\n", tokenName.c_str(), lineno);
+        fflush(stdout);     
+    }
+    else{
+        printf("%s near line %d\n", s.c_str(),lineno);
+        fflush(stdout); 
+    }
+    errorFound = true;    
 }
 
 int main(void) {
@@ -652,12 +699,17 @@ int ex(nodeType *p) {
                         
                         int initAddr = myPStack.pos();
                         //fprintf(stderr, "%d", initAddr);
-                        ex(p->opr.op[1]);
+                        ex(p->opr.op[1]);                        
                         
+                        myPStack.add(I_JMP);
+                        myPStack.add(0);
+                        int nextAddr = myPStack.pos();
+
+                        myPStack.at(initAddr-1) = myPStack.pos();
                         if (p->opr.nops > 2)
                             ex(p->opr.op[2]);
 
-                        myPStack.at(initAddr-1) = myPStack.pos();
+                        myPStack.at(nextAddr-1) = myPStack.pos();
 
                         return 0;
                         }
