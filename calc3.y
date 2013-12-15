@@ -72,9 +72,9 @@ function:
 
 stmt:
           ';'                            { $$ = opr(';', 2, NULL, NULL); }
-        | procedure  {pushSymbolTable();} 
+        | procedure  {pushSymbolTable(); progBlkLvl= getCurrentLevel();}
             '{'  stmt_list '}' 
-            { $$ = opr(PROCEDURE, 2, $1, $4);}
+            { $$ = opr(PROCEDURE, 2, $1, $4); progBlkLvl--;}
         | call ';'                       { $$ = opr(CALL, 1, $1);}                    
         | blk                            { $$ = $1;}
         | expr ';'                       { $$ = $1;}                    
@@ -102,7 +102,7 @@ blk:    {pushSymbolTable(); progBlkLvl = getCurrentLevel();}
             BG stmt_list ED 
             {$$ = opr(BG, 1, $3); progBlkLvl--;}
         ;
-procedure: PROCEDURE VARIABLE '(' ')' {$$ = declareProc(newId($2)); }
+procedure: PROCEDURE VARIABLE '(' ')' {$$ = declareProc(newId($2));}
         ;
 
 call: VARIABLE '(' ')'  {$$ = id($1);}
@@ -194,7 +194,7 @@ nodeType *id(char* i){
     if((entry=getSymbolEntry(i)) == NULL)
         yyerror("missing declaration for identifier");
 
-    if(entry->blk_level < progBlkLvl ){
+    if(entry->blk_level < progBlkLvl && entry->type != TYPE_PROC ){
         symbol_entry *new_entry;
         new_entry = newId(entry->name)->id.i;
         new_entry->type = entry->type;

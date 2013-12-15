@@ -10,15 +10,15 @@ extern int lineno;
 %s block
 %%
 
-"/*"           {BEGIN(comment);}
+"/*"            {BEGIN(comment);}
 <comment>{
-\n             ++lineno;
-"*/"           BEGIN(INITIAL);
-[^*\n]*        {}/* eat anything that's not a '*' */
-"*"            {}/* eat up '*'s not followed by '/'s */
+\n              ++lineno;
+"*/"            BEGIN(INITIAL);
+[^*\n]*         {}/* eat anything that's not a '*' */
+"*"             {}/* eat up '*'s not followed by '/'s */
 }
-[ \t]+         {}
-\n             ++lineno;
+[ \t]+          {}
+\n              ++lineno;
 "//".*"\n"      {lineno++;}
 ">="            return GE;
 "<="            return LE;

@@ -1,8 +1,20 @@
-begin
-  int i;
-  i=4;
-  print i 
-  float k;
-  k = 3.2
-  print k;
-end
+int a  = 1;
+
+procedure printnums(){
+print a;    //prints 1
+print 1;    //prints 1
+print 1+a;  //prints 2
+}
+
+printnums(); //calls print num, should print in order 1, 1, 2
+
+procedure nest1(){
+procedure nest2(){
+print 2; //prints 2
+}
+print 1; //prints 1
+nest2(); //calls nest2, should print 2
+printnums(); //calls printnum, should print 1, 1, 2
+}
+
+nest1(); //calls nest 1, prints 1, then call nest2 and printnum

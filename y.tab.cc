@@ -1610,14 +1610,14 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 75 "calc3.y"
-    {pushSymbolTable();}
+    {pushSymbolTable(); progBlkLvl= getCurrentLevel();}
     break;
 
   case 7:
 
 /* Line 1806 of yacc.c  */
 #line 77 "calc3.y"
-    { (yyval.nPtr) = opr(PROCEDURE, 2, (yyvsp[(1) - (5)].nPtr), (yyvsp[(4) - (5)].nPtr));}
+    { (yyval.nPtr) = opr(PROCEDURE, 2, (yyvsp[(1) - (5)].nPtr), (yyvsp[(4) - (5)].nPtr)); progBlkLvl--;}
     break;
 
   case 8:
@@ -1778,7 +1778,7 @@ yyreduce:
 
 /* Line 1806 of yacc.c  */
 #line 105 "calc3.y"
-    {(yyval.nPtr) = declareProc(newId((yyvsp[(2) - (4)].sVariable))); }
+    {(yyval.nPtr) = declareProc(newId((yyvsp[(2) - (4)].sVariable)));}
     break;
 
   case 37:
@@ -2260,7 +2260,7 @@ nodeType *id(char* i){
     if((entry=getSymbolEntry(i)) == NULL)
         yyerror("missing declaration for identifier");
 
-    if(entry->blk_level < progBlkLvl ){
+    if(entry->blk_level < progBlkLvl && entry->type != TYPE_PROC ){
         symbol_entry *new_entry;
         new_entry = newId(entry->name)->id.i;
         new_entry->type = entry->type;
